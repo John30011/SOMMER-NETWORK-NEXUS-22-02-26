@@ -1,0 +1,7 @@
+{
+  "name": "Sommer Network Nexus",
+  "description": "Dashboard NOC moderno para monitoreo de fallas de red e incidentes masivos con integración en tiempo real con Supabase.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
