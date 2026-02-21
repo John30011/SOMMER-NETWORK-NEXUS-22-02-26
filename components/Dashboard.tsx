@@ -2,6 +2,7 @@
 // ... existing imports ...
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { supabase, isDemoMode } from '../supabaseClient';
+import { getFriendlyErrorMessage, isNetworkError } from '../utils/errorHandling';
 import { NetworkFailure, MassiveIncident, AppNotification, ScheduledTask } from '../types';
 import { MOCK_FAILURES, MOCK_MASSIVE } from '../constants';
 import FailureCard from './FailureCard';
@@ -302,13 +303,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateToInventory, onNavigate
       });
   };
 
-  const getFriendlyErrorMessage = (rawError: any): string => {
-    const msg = rawError.message || String(rawError);
-    if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) return "Conexión interrumpida con el servidor.";
-    if (msg.includes('JWT') || msg.includes('token')) return "Su sesión ha caducado.";
-    return msg || "Error inesperado.";
-  };
-
   const getCountryInitials = (pais: string | undefined) => {
       if (!pais) return '';
       const p = pais.toUpperCase();
@@ -381,14 +375,45 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateToInventory, onNavigate
     try {
       if (!isBackgroundSync) setLoading(true);
       
-      const { data: failData, error: failError } = await supabase.from('network_failures_jj').select('*'); 
-      if (failError) throw failError;
+      const todayStart = new Date();
+      todayStart.setHours(0,0,0,0);
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+      // Parallelize independent initial fetches
+      const [failRes, massRes, countRes, taskRes] = await Promise.all([
+        supabase
+          .from('network_failures_jj')
+          .select('*')
+          // Optimization: Only fetch active/pending OR those resolved in the last 24h
+          .or(`lifecycle_stage.not.in.("Resuelta","Falso Positivo"),start_time.gte.${oneDayAgo}`),
+        supabase
+          .from('massive_incidents_jj')
+          .select('*')
+          .eq('status', 'Activa')
+          .order('start_time', { ascending: false }),
+        supabase
+          .from('devices_inventory_jj')
+          .select('*', { count: 'exact', head: true }),
+        supabase
+          .from('provider_tasks_jj')
+          .select('*, provider:isp_providers_jj(name)')
+          .gte('tp_end_time', todayStart.toISOString())
+      ]);
+
+      if (failRes.error) throw failRes.error;
+      if (massRes.error) throw massRes.error;
+
+      const failData = failRes.data;
+      const massData = massRes.data;
+      const deviceCount = countRes.count;
+      const taskData = taskRes.data;
 
       let fetchedFailures: NetworkFailure[] = [];
-      let fetchedMassive: MassiveIncident[] = [];
+      let fetchedMassive: MassiveIncident[] = massData as MassiveIncident[] || [];
 
+      // 2. Secondary fetch for inventory details (depends on failData)
       if (failData && failData.length > 0) {
-          const networkIds = failData.map((f: any) => f.network_id);
+          const networkIds = [...new Set(failData.map((f: any) => f.network_id))];
           const { data: invData } = await supabase
               .from('devices_inventory_jj')
               .select(`network_id, nombre_tienda, codigo_tienda, meraki_url, pais, wan1_provider:isp_providers_jj!wan1_provider_id(name), wan2_provider:isp_providers_jj!wan2_provider_id(name)`)
@@ -410,27 +435,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateToInventory, onNavigate
       
       const sortedFailures = sortFailures(fetchedFailures);
       setFailures(sortedFailures);
-
-      const { data: massData, error: massError } = await supabase
-        .from('massive_incidents_jj')
-        .select('*')
-        .eq('status', 'Activa')
-        .order('start_time', { ascending: false });
-
-      if (massError) throw massError;
-      if (massData) fetchedMassive = massData as MassiveIncident[];
       setMassiveIncidents(fetchedMassive);
 
-      const { count: deviceCount } = await supabase.from('devices_inventory_jj').select('*', { count: 'exact', head: true });
       if (deviceCount !== null) setTotalDevices(deviceCount);
 
-      const todayStart = new Date();
-      todayStart.setHours(0,0,0,0);
-      const { data: taskData } = await supabase
-          .from('provider_tasks_jj')
-          .select('*, provider:isp_providers_jj(name)')
-          .gte('tp_end_time', todayStart.toISOString());
-          
       if (taskData) {
           const mappedTasks = taskData.map((t: any) => ({ ...t, provider_name: t.provider?.name }));
           setProviderTasks(mappedTasks);
@@ -442,12 +450,24 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateToInventory, onNavigate
       setTimeout(() => setSyncStatus('LIVE'), 500);
 
     } catch (err: any) {
-      console.error('Error fetching dashboard data:', err);
       const msg = getFriendlyErrorMessage(err);
-      if (msg.includes('Conexión interrumpida') || msg.includes('fetch')) {
+      console.warn('Dashboard Sync:', msg); 
+      
+      if (msg.includes('caducado') || msg.includes('JWT') || msg.includes('token')) {
+          console.log("Detectado error de sesión. Intentando refrescar...");
+          // Attempt to refresh session
+          const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
+          if (refreshedSession) {
+              console.log("Sesión refrescada exitosamente. Reintentando sincronización...");
+              fetchData(true); // Retry once
+              return;
+          }
+      }
+      
+      if (isNetworkError(err)) {
           if(failures.length === 0) loadMockData();
-          setErrorMsg("Modo desconectado: Visualizando datos de demostración.");
-          generateNotifications(failures, massiveIncidents, "Error de conexión con la base de datos.");
+          setErrorMsg("Modo de demostración activo (Sin conexión a base de datos).");
+          setSyncStatus('OFFLINE');
       } else {
           setErrorMsg(msg);
           setSyncStatus('OFFLINE');

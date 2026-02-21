@@ -46,13 +46,28 @@ const App: React.FC = () => {
     // 2. Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log(`Auth Event: ${event}`);
       setSession(session);
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
+  
+  // 3. Keep-Alive: Periodically check session to prevent expiration
+  useEffect(() => {
+    if (!session) return;
+    
+    const keepAliveInterval = setInterval(async () => {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (currentSession) {
+            setSession(currentSession);
+        }
+    }, 1000 * 60 * 15); // Every 15 minutes
+    
+    return () => clearInterval(keepAliveInterval);
+  }, [session]);
 
   // Centralized function to start simple welcome message
   const triggerWelcomeSequence = (currentSession: any) => {

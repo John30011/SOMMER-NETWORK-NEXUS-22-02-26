@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { supabase, isDemoMode } from '../supabaseClient';
+import { getFriendlyErrorMessage, isNetworkError } from '../utils/errorHandling';
 import { MassiveIncident, NetworkFailure } from '../types';
 import MassiveIncidentCard from './MassiveIncidentCard';
 import { Radio, Loader2, Search, Filter, AlertTriangle, CheckCircle2, History, X, RefreshCw, Calendar, Clock, Globe, ChevronDown, ChevronUp, Store, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
@@ -155,7 +156,6 @@ const Massive: React.FC = () => {
     setLoading(true);
     try {
       if (isDemoMode) {
-        // Mock Data for Demo
         setIncidents([
              ...MOCK_MASSIVE,
              {
@@ -172,7 +172,6 @@ const Massive: React.FC = () => {
              } as MassiveIncident
         ]);
         
-        // Mock details for the history item
         if (failures.length === 0) {
             setFailures([
                 { id: 'h1', network_id: 'CO-001', codigo_tienda: 'T-101', nombre_tienda: 'Bogota Centro', wan1_provider_name: 'ETB Fibra', wan2_provider_name: 'CLARO', wan1_massive_incident_id: 999 } as any,
@@ -187,28 +186,27 @@ const Massive: React.FC = () => {
         return;
       }
 
-      // 1. Fetch All Massive Incidents
-      const { data: massData, error: massError } = await supabase
-        .from('massive_incidents_jj')
-        .select('*')
-        .order('start_time', { ascending: false });
-
-      if (massError) throw massError;
-
-      // 2. Fetch associated failures to pass to cards (for details view)
-      // We limit to active failures mostly, or recent ones
-      const { data: failData, error: failError } = await supabase
+      // Parallelize fetches
+      const [massRes, failRes] = await Promise.all([
+        supabase
+          .from('massive_incidents_jj')
+          .select('*')
+          .order('start_time', { ascending: false }),
+        supabase
           .from('network_failures_jj')
           .select('*')
           .eq('es_falla_masiva', true)
-          .limit(1000); // Increased limit to ensure we capture large massive incidents (like 128 items)
-      
-      if (failError) console.warn("Error fetching details for massive incidents", failError);
+          .limit(1000)
+      ]);
+
+      if (massRes.error) throw massRes.error;
+      const massData = massRes.data;
+      const failData = failRes.data;
 
       // Join inventory data for names
       let enrichedFailures: NetworkFailure[] = [];
       if (failData && failData.length > 0) {
-           const ids = failData.map((f:any) => f.network_id);
+           const ids = [...new Set(failData.map((f:any) => f.network_id))];
            const { data: invData } = await supabase
             .from('devices_inventory_jj')
             .select('network_id, nombre_tienda, codigo_tienda, wan1_provider:isp_providers_jj!wan1_provider_id(name), wan2_provider:isp_providers_jj!wan2_provider_id(name)')
@@ -229,8 +227,26 @@ const Massive: React.FC = () => {
       setIncidents(massData as MassiveIncident[] || []);
       setFailures(enrichedFailures);
 
-    } catch (err) {
-      console.error("Error fetching massive incidents:", err);
+    } catch (err: any) {
+      console.warn("Error fetching massive incidents:", err);
+      if (isNetworkError(err)) {
+          // Fallback to mock data if fetch fails
+          setIncidents([
+              ...MOCK_MASSIVE,
+              {
+                  id: 999,
+                  provider_name: 'ETB Fibra',
+                  country: 'CO',
+                  status: 'Resuelta',
+                  recovery_status: 'Finalizada',
+                  current_active_count: 5,
+                  total_provider_inventory: 50,
+                  recovery_percentage: 100,
+                  start_time: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
+                  end_time: new Date(Date.now() - 1000 * 60 * 60 * 45).toISOString()
+              } as MassiveIncident
+          ]);
+      }
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { supabase, isDemoMode } from '../supabaseClient';
+import { getFriendlyErrorMessage, isNetworkError } from '../utils/errorHandling';
 import { NetworkFailure } from '../types';
 import { MOCK_FAILURES } from '../constants';
 import { CheckCircle, Search, Calendar, Clock, RotateCw, AlertTriangle, FileCheck, MapPin, ExternalLink, X, ListFilter, Timer, ArrowRight, History, BarChart2, TrendingDown, Server, ShieldCheck, CalendarDays, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
@@ -256,8 +257,7 @@ const Resolved: React.FC = () => {
         }
       } else {
         // Real fetch
-        // 1. Fetch Failures with status 'Resuelta' or 'Falso Positivo'
-        // Increase limit to allow client-side filtering of recent items
+        // 1. Parallelize initial fetch
         const { data: failData, error: failError } = await supabase
           .from('network_failures_jj')
           .select('*')
@@ -268,7 +268,7 @@ const Resolved: React.FC = () => {
         if (failError) throw failError;
 
         if (failData && failData.length > 0) {
-            const networkIds = failData.map((f: any) => f.network_id);
+            const networkIds = [...new Set(failData.map((f: any) => f.network_id))];
             
             // 2. Fetch Store Details to join names
             const { data: invData } = await supabase
@@ -314,8 +314,12 @@ const Resolved: React.FC = () => {
       });
 
       setFailures(historicalFailures);
-    } catch (err) {
-      console.error("Error fetching resolved incidents:", err);
+    } catch (err: any) {
+      console.warn("Error fetching resolved incidents:", err);
+      if (isNetworkError(err)) {
+          // Fallback to mock data if fetch fails
+          setFailures(MOCK_FAILURES.filter(f => f.lifecycle_stage === 'Resuelta' || f.lifecycle_stage === 'Falso Positivo'));
+      }
     } finally {
       setLoading(false);
     }

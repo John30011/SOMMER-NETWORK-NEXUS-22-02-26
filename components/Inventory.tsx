@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { supabase, isDemoMode } from '../supabaseClient';
+import { getFriendlyErrorMessage, isNetworkError } from '../utils/errorHandling';
 import { DeviceInventory, ISPProvider } from '../types';
 import { Search, Server, RefreshCw, Box, AlertTriangle, X, Database, Globe, ExternalLink, ArrowUpDown, ArrowUp, ArrowDown, Filter, SearchX, Wifi, Edit3, Save, Loader2, Info, Store, ChevronDown, Check, Square, CheckSquare, Clock, Calculator, Router, Cloud, ArrowLeftRight, Zap } from 'lucide-react';
 
@@ -269,14 +270,6 @@ const Inventory: React.FC<InventoryProps> = ({ targetNetworkId }) => {
     }
   };
 
-  const getFriendlyErrorMessage = (rawError: any): string => {
-    const msg = rawError.message || String(rawError);
-    if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
-        return "Conexión interrumpida.";
-    }
-    return msg || "Ocurrió un error inesperado cargando el inventario.";
-  };
-
   const loadMockInventory = () => {
       setDevices([
           { 
@@ -356,12 +349,12 @@ const Inventory: React.FC<InventoryProps> = ({ targetNetworkId }) => {
       
       setTimeout(() => setSyncStatus('LIVE'), 500);
     } catch (err: any) {
-      console.error('Error fetching inventory:', err);
-      
       const msg = getFriendlyErrorMessage(err);
-      if (msg.includes('Conexión interrupted') || msg.includes('fetch')) {
-          console.log("Fallback to mock inventory due to network error");
+      console.warn('Inventory Sync:', msg);
+      
+      if (isNetworkError(err)) {
           loadMockInventory();
+          setSyncStatus('OFFLINE');
       } else {
           setErrorMsg(msg);
           setSyncStatus('OFFLINE');

@@ -82,6 +82,17 @@
       .fade-in { animation-name: enter-fade; }
       .zoom-in-95 { animation-name: enter-zoom; }
       .slide-in-from-bottom-2 { animation-name: slide-up-fade; }
+
+      @keyframes pulse-subtle {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.85; transform: scale(0.98); }
+      }
+      @keyframes bounce-subtle {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-3px); }
+      }
+      .animate-pulse-subtle { animation: pulse-subtle 3s ease-in-out infinite; }
+      .animate-bounce-subtle { animation: bounce-subtle 2s ease-in-out infinite; }
     </style>
   <script type="importmap">
 {
