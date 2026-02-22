@@ -69,27 +69,121 @@ const App: React.FC = () => {
     return () => clearInterval(keepAliveInterval);
   }, [session]);
 
-  // Centralized function to start simple welcome message
-  const triggerWelcomeSequence = (currentSession: any) => {
-    // 1. Set User Name immediate
-    let name = 'Analista';
-    if (currentSession && currentSession.user) {
-      name = currentSession.user.user_metadata?.first_name || currentSession.user.email?.split('@')[0] || 'Analista';
+  // Centralized function to start simple & dynamic welcome message
+  const triggerWelcomeSequence = async (currentSession: any) => {
+    // 1. Initial name fallback from session
+    let name = currentSession?.user?.user_metadata?.first_name || currentSession?.user?.email?.split('@')[0] || 'Director';
+
+    // Attempt to get name from users_jj
+    if (currentSession?.user?.id) {
+      try {
+        const { data: userData } = await supabase
+          .from('users_jj')
+          .select('first_name, last_name')
+          .eq('id', currentSession.user.id)
+          .single();
+        if (userData?.first_name) {
+          name = userData.first_name;
+        }
+      } catch (e) {
+        console.error("Error fetching user from users_jj", e);
+      }
     }
+
     setUserName(name);
 
-    // 2. Show Welcome Overlay IMMEDIATELY
+    // 2. Setup dynamic voice message using Web Speech API
+    if ('speechSynthesis' in window) {
+      const welcomeMessages = [
+        `Hola ${name}, bienvenido a Sommer Network Nexus. Es un placer tenerte de vuelta.`,
+        `Saludos, ${name}. Los sistemas de Nexus están en línea y a tu disposición.`,
+        `Bienvenido de vuelta, ${name}. Preparando tu consola ejecutiva y topología de red.`,
+        `Hola ${name}. Conexión segura establecida. Bienvenido al centro de control corporativo.`,
+        `Qué tal, ${name}. Iniciando interfaz gerencial. Todos tus datos están actualizados y listos.`
+      ];
+      const randomMessage = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
+
+      // Cancel previous speech if any
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(randomMessage);
+      // Español Americano (Neutro/USA)
+      utterance.lang = 'es-US';
+      utterance.rate = 1.05; // Toque juvenil, levemente más veloz
+      utterance.pitch = 1.0;
+
+      const selectMaleVoice = () => {
+        let voices = window.speechSynthesis.getVoices();
+        if (voices.length === 0) return;
+
+        // Quitar de España
+        const latamVoices = voices.filter(v => v.lang.startsWith('es') && !v.lang.includes('es-ES') && !v.lang.includes('ES') && !v.lang.includes('es_ES'));
+        const fallbackSpanishVoices = voices.filter(v => v.lang.startsWith('es'));
+
+        // 1. Natural masculino de US (Alonso, Rodrigo, Fernando, etc)
+        let bestVoice = latamVoices.find(v =>
+          /Natural|Online/i.test(v.name) &&
+          /Alonso|Rodrigo|Fernando|Gerardo|Jorge|Tomas|Emilio/i.test(v.name)
+        );
+
+        // 2. Natural US generico no femenino
+        if (!bestVoice) {
+          bestVoice = latamVoices.find(v => /Natural|Online/i.test(v.name) && v.lang.includes('US') && !/Sabina|Helena|Laura|Paulina|Mia|Dalia|Beatriz|Carmen|Paloma/i.test(v.name));
+        }
+
+        // 3. Natural cualquier latam no femenino
+        if (!bestVoice) {
+          bestVoice = latamVoices.find(v => /Natural|Online/i.test(v.name) && !/Sabina|Helena|Laura|Paulina|Mia|Dalia|Beatriz|Carmen|Paloma/i.test(v.name));
+        }
+
+        // 4. Locales offline masculinos
+        if (!bestVoice) {
+          bestVoice = latamVoices.find(v =>
+            /Alonso|Rodrigo|Fernando|Jorge|Gerardo|Antonio|Raul|Diego|Carlos|Miguel/i.test(v.name)
+          );
+        }
+
+        // 5. Fallback a engine de sistema US masculino
+        if (!bestVoice) {
+          bestVoice = latamVoices.find(v =>
+            !/Sabina|Helena|Laura|Paulina|Mia|Dalia|Beatriz|Carmen|Paloma/i.test(v.name) && (/Google.*US/i.test(v.name) || /Microsoft.*US/i.test(v.name))
+          );
+        }
+
+        if (bestVoice) {
+          utterance.voice = bestVoice;
+          console.log("Voz App.tsx seleccionada:", bestVoice.name);
+        } else if (latamVoices.length > 0) {
+          utterance.voice = latamVoices[0];
+        } else if (fallbackSpanishVoices.length > 0) {
+          utterance.voice = fallbackSpanishVoices[0];
+        }
+
+        window.speechSynthesis.speak(utterance);
+      };
+
+      // Ensure voices are loaded
+      let initialVoices = window.speechSynthesis.getVoices();
+      if (initialVoices.length > 0) {
+        selectMaleVoice();
+      } else {
+        window.speechSynthesis.onvoiceschanged = () => {
+          selectMaleVoice();
+        };
+      }
+    }
+
+    // 3. Show Welcome Overlay IMMEDIATELY
     setShowWelcome(true);
 
-    // 3. Navigate to dashboard in background so it's ready
+    // 4. Navigate to dashboard in background so it's ready
     setActiveTab('dashboard');
 
-    // 4. Hide overlay after 2 seconds
+    // 5. Hide overlay after enough time to hear most of the greeting
     setTimeout(() => {
       setShowWelcome(false);
       // Force session refresh just in case
       supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
-    }, 2500);
+    }, 4500);
   };
 
   // Called when clicking "Inventory" on a Failure Card

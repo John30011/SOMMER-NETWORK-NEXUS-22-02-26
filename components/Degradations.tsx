@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase, isDemoMode } from '../supabaseClient';
 import { NetworkDegradation } from '../types';
-import { Activity, Clock, FileText, CheckCircle, Search, Box, AlertCircle, RefreshCw, Undo2, Save, Terminal, Notebook, Mail } from 'lucide-react';
+import { Activity, Clock, FileText, CheckCircle, Search, Box, AlertCircle, RefreshCw, Undo2, Save, Terminal, Notebook, Mail, Volume2, Square } from 'lucide-react';
 
 // Helper for date formatting
 const formatDate = (isoString: string) => {
@@ -38,6 +38,73 @@ const DegradationCard: React.FC<DegradationCardProps> = ({ degradation, onCloseC
   const [isClosingModal, setIsClosingModal] = useState(false);
   const [noteInput, setNoteInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  // Stop speech if modal is closed
+  useEffect(() => {
+    if (isClosingModal && isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+  }, [isClosingModal, isSpeaking]);
+
+  const handleSpeak = (text: string) => {
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+    if (!text) return;
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    // Español Americano (Neutro/USA)
+    utterance.lang = 'es-US';
+    utterance.rate = 1.05; // Toque juvenil, levemente más veloz
+    utterance.pitch = 1.0;
+
+    const selectMaleVoice = () => {
+      let voices = window.speechSynthesis.getVoices();
+      if (voices.length === 0) return;
+
+      const latamVoices = voices.filter(v => v.lang.startsWith('es') && !v.lang.includes('es-ES') && !v.lang.includes('ES') && !v.lang.includes('es_ES'));
+      const fallbackSpanishVoices = voices.filter(v => v.lang.startsWith('es'));
+
+      let bestVoice = latamVoices.find(v =>
+        /Natural|Online/i.test(v.name) &&
+        /Alonso|Rodrigo|Fernando|Gerardo|Jorge|Tomas|Emilio/i.test(v.name)
+      );
+
+      if (!bestVoice) bestVoice = latamVoices.find(v => /Natural|Online/i.test(v.name) && v.lang.includes('US') && !/Sabina|Helena|Laura|Paulina|Mia|Dalia|Beatriz|Carmen|Paloma/i.test(v.name));
+      if (!bestVoice) bestVoice = latamVoices.find(v => /Natural|Online/i.test(v.name) && !/Sabina|Helena|Laura|Paulina|Mia|Dalia|Beatriz|Carmen|Paloma/i.test(v.name));
+      if (!bestVoice) bestVoice = latamVoices.find(v => /Alonso|Rodrigo|Fernando|Jorge|Gerardo|Antonio|Raul|Diego|Carlos|Miguel/i.test(v.name));
+      if (!bestVoice) bestVoice = latamVoices.find(v => !/Sabina|Helena|Laura|Paulina|Mia|Dalia|Beatriz|Carmen|Paloma/i.test(v.name) && (/Google.*US/i.test(v.name) || /Microsoft.*US/i.test(v.name)));
+
+      if (bestVoice) {
+        utterance.voice = bestVoice;
+        console.log("Voz Degradations seleccionada:", bestVoice.name);
+      } else if (latamVoices.length > 0) {
+        utterance.voice = latamVoices[0];
+      } else if (fallbackSpanishVoices.length > 0) {
+        utterance.voice = fallbackSpanishVoices[0];
+      }
+
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+
+      setIsSpeaking(true);
+      window.speechSynthesis.speak(utterance);
+    };
+
+    let initialVoices = window.speechSynthesis.getVoices();
+    if (initialVoices.length > 0) {
+      selectMaleVoice();
+    } else {
+      window.speechSynthesis.onvoiceschanged = () => {
+        selectMaleVoice();
+      };
+    }
+  };
 
   // Join data handler
   const deviceInfo = degradation.device_info || (degradation as any).devices_inventory_jj;
@@ -245,9 +312,18 @@ const DegradationCard: React.FC<DegradationCardProps> = ({ degradation, onCloseC
             <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
               <div className="w-full lg:w-[45%] bg-zinc-950 border-r border-zinc-800/80 p-6 flex flex-col overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800">
                 <section className="mb-6 shrink-0">
-                  <h3 className="text-zinc-500 font-bold uppercase text-xs tracking-widest mb-3 flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4" /> Diagnóstico
-                  </h3>
+                  <div className="flex items-center justify-between mb-3 border-b border-zinc-900 pb-2">
+                    <h3 className="text-zinc-500 font-bold uppercase text-xs tracking-widest flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" /> Diagnóstico
+                    </h3>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleSpeak(degradation.diagnosis_text || 'Sin texto de diagnóstico provisto por el analista o AIOps.'); }}
+                      className={`flex items-center justify-center w-8 h-8 rounded-full transition-all ${isSpeaking ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-transparent text-zinc-500 hover:text-white hover:bg-zinc-800'}`}
+                      title={isSpeaking ? "Detener lectura" : "Escuchar diagnóstico (AIOps Voice)"}
+                    >
+                      {isSpeaking ? <Square className="w-4 h-4 fill-current" /> : <Volume2 className="w-4 h-4" />}
+                    </button>
+                  </div>
                   <div className="text-emerald-300 font-medium text-sm leading-relaxed bg-black p-5 rounded-xl border border-zinc-800 shadow-[inset_0_2px_15px_rgba(0,0,0,0.8)] whitespace-pre-wrap font-mono">
                     {degradation.diagnosis_text || 'Sin texto de diagnóstico provisto por el analista o AIOps.'}
                   </div>
