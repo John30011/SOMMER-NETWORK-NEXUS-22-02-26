@@ -389,7 +389,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigateToInventory, onNavigate
         supabase
           .from('massive_incidents_jj')
           .select('*')
-          .eq('status', 'Activa')
+          .in('status', ['Activa', 'En observación'])
           .order('start_time', { ascending: false }),
         supabase
           .from('devices_inventory_jj')
