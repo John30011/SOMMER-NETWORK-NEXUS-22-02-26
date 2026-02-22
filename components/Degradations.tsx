@@ -429,8 +429,8 @@ const Degradations: React.FC<DegradationsProps> = ({ onNavigateToDashboard, onNa
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'All' | 'Activa' | 'Cerrada'>('All');
 
-  const fetchDegradations = async () => {
-    setLoading(true);
+  const fetchDegradations = async (isBackgroundSync = false) => {
+    if (!isBackgroundSync) setLoading(true);
     try {
       if (isDemoMode) {
         // Mock Data implementation could go here, but focusing on real logic
@@ -486,6 +486,8 @@ const Degradations: React.FC<DegradationsProps> = ({ onNavigateToDashboard, onNa
 
   useEffect(() => {
     fetchDegradations();
+    const intervalId = setInterval(() => fetchDegradations(true), 60000); // 60 segundos
+    return () => clearInterval(intervalId);
   }, []);
 
   const handleCloseCase = async (id: string | number) => {

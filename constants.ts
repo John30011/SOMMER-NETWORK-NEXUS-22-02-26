@@ -4,47 +4,47 @@ import { LifecycleStage, NetworkFailure, MassiveIncident } from './types';
 
 // Color Mapping Logic
 export const STAGE_CONFIG: Record<LifecycleStage, { color: string; icon: any; border: string; bg: string }> = {
-  'Activa': { 
-    color: 'text-red-500', 
-    border: 'border-red-500', 
+  'Activa': {
+    color: 'text-red-500',
+    border: 'border-red-500',
     bg: 'bg-red-500/10',
-    icon: AlertCircle 
+    icon: AlertCircle
   },
-  'En gestión': { 
-    color: 'text-orange-500', 
-    border: 'border-orange-500', 
+  'En gestión': {
+    color: 'text-orange-500',
+    border: 'border-orange-500',
     bg: 'bg-orange-500/10',
-    icon: Wrench 
+    icon: Wrench
   },
-  'En observación': { 
-    color: 'text-yellow-500', 
-    border: 'border-yellow-500', 
+  'En observación': {
+    color: 'text-yellow-500',
+    border: 'border-yellow-500',
     bg: 'bg-yellow-500/10',
-    icon: Eye 
+    icon: Eye
   },
-  'Intermitencia': { 
-    color: 'text-purple-500', 
-    border: 'border-purple-500', 
+  'Intermitencia': {
+    color: 'text-purple-500',
+    border: 'border-purple-500',
     bg: 'bg-purple-500/10',
-    icon: Activity 
+    icon: Activity
   },
-  'Pendiente por cierre': { 
-    color: 'text-blue-500', 
-    border: 'border-blue-500', 
+  'Pendiente por cierre': {
+    color: 'text-blue-500',
+    border: 'border-blue-500',
     bg: 'bg-blue-500/10',
-    icon: Lock 
+    icon: Lock
   },
-  'Resuelta': { 
-    color: 'text-green-500', 
-    border: 'border-green-500', 
+  'Resuelta': {
+    color: 'text-green-500',
+    border: 'border-green-500',
     bg: 'bg-green-500/10',
-    icon: CheckCircle2 
+    icon: CheckCircle2
   },
-  'Falso Positivo': { 
-    color: 'text-gray-500', 
-    border: 'border-gray-500', 
+  'Falso Positivo': {
+    color: 'text-gray-500',
+    border: 'border-gray-500',
     bg: 'bg-gray-500/10',
-    icon: XCircle 
+    icon: XCircle
   },
 };
 
@@ -55,6 +55,7 @@ export const MOCK_FAILURES: NetworkFailure[] = [
     network_id: 'MX-CDMX-001',
     nombre_tienda: 'Centro Histórico Flagship',
     codigo_tienda: 'T-9901',
+    cruce_tienda: 'Esq. Las Acacias con Av. Bolívar',
     meraki_url: 'https://meraki.cisco.com',
     lifecycle_stage: 'Activa',
     site_impact: 'TOTAL',
@@ -69,6 +70,7 @@ export const MOCK_FAILURES: NetworkFailure[] = [
     network_id: 'CO-BOG-042',
     nombre_tienda: 'Bogotá Norte Shopping',
     codigo_tienda: 'T-2042',
+    cruce_tienda: 'Autopista Norte esq. Calle 100',
     meraki_url: 'https://meraki.cisco.com',
     lifecycle_stage: 'En gestión',
     site_impact: 'PARCIAL',
@@ -102,7 +104,7 @@ export const MOCK_FAILURES: NetworkFailure[] = [
     wan2_status: 'UP',
     // Resolved logic usually implies both UP
   },
-   {
+  {
     id: '5',
     network_id: 'MX-MTY-099',
     nombre_tienda: 'Monterrey Valle',

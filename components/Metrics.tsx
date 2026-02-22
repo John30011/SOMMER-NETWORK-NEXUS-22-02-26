@@ -133,8 +133,45 @@ const Metrics: React.FC = () => {
         failures: NetworkFailure[];
     } | null>(null);
 
+    // SLA HISTORICAL TIMEFRAME STATE
+    const [slaTimeframe, setSlaTimeframe] = useState<3 | 6 | 12>(6);
+
+    // DYNAMIC HEALTH METRIC ALIGNED WITH DASHBOARD
+    const activeIncidentsCount = useMemo(() => {
+        const activeMassiveIds = new Set(
+            failures
+                .filter(f => f.event_type === 'Falla Masiva' && (f.lifecycle_stage === 'Activa' || f.lifecycle_stage === 'En observación'))
+                .map(f => String(f.id).replace('mas-', ''))
+        );
+
+        return failures.filter(f => {
+            if (f.event_type !== 'Falla Estándar') return false;
+
+            const isActiveStage = ['Activa', 'En gestión', 'En observación', 'Intermitencia'].includes(f.lifecycle_stage);
+            if (!isActiveStage) return false;
+
+            // Check specifically like Dashboard does
+            const isMassive = (f as any).es_falla_masiva;
+            if (isMassive) {
+                const p1 = (f as any).wan1_massive_incident_id ? String((f as any).wan1_massive_incident_id) : null;
+                const p2 = (f as any).wan2_massive_incident_id ? String((f as any).wan2_massive_incident_id) : null;
+                const parentIsActive = (p1 && activeMassiveIds.has(p1)) || (p2 && activeMassiveIds.has(p2));
+                if ((p1 || p2) && !parentIsActive) return false;
+            }
+            return true;
+        }).length;
+    }, [failures]);
+
+    const healthMetric = useMemo(() => {
+        if (totalDevices === 0) return 100;
+        const percent = ((totalDevices - activeIncidentsCount) / totalDevices) * 100;
+        return Math.max(0, Math.min(100, percent)).toFixed(2);
+    }, [totalDevices, activeIncidentsCount]);
+
     useEffect(() => {
         fetchMetricsData();
+        const intervalId = setInterval(() => fetchMetricsData(true), 60000); // 60 segundos
+        return () => clearInterval(intervalId);
     }, []);
 
     // Handle click outside for provider selector
@@ -148,8 +185,8 @@ const Metrics: React.FC = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const fetchMetricsData = async () => {
-        setLoading(true);
+    const fetchMetricsData = async (isBackgroundSync = false) => {
+        if (!isBackgroundSync) setLoading(true);
         try {
             // Fetch massive amount of data (last 12 months to support Year view)
             const now = new Date();
@@ -183,7 +220,8 @@ const Metrics: React.FC = () => {
                         total_downtime_minutes: Math.floor(Math.random() * 180),
                         wan1_ticket_ref: `INC-${10000 + i}`,
                         wan2_ticket_ref: Math.random() > 0.5 ? `NOT-REQ` : `SEG-${500 + i}`,
-                        site_impact: Math.random() > 0.8 ? 'TOTAL' : 'PARCIAL'
+                        site_impact: Math.random() > 0.8 ? 'TOTAL' : 'PARCIAL',
+                        cruce_tienda: ['Av. Principal Centro', 'Esq. Comercial Sur', 'Calle 50 con Cra 10', 'Plaza Mayor'][Math.floor(Math.random() * 4)]
                     } as any;
                 });
                 data = [...data, ...dummyHistory];
@@ -193,7 +231,7 @@ const Metrics: React.FC = () => {
                 const [failRes, degRes, masRes, countRes, provsRes, invRes] = await Promise.all([
                     supabase
                         .from('network_failures_jj')
-                        .select('id, network_id, start_time, lifecycle_stage, total_downtime_minutes, wan1_downtime_minutes, wan2_downtime_minutes, site_impact, root_cause, liability')
+                        .select('id, network_id, start_time, lifecycle_stage, total_downtime_minutes, wan1_downtime_minutes, wan2_downtime_minutes, site_impact, root_cause, liability, wan1_massive_incident_id, wan2_massive_incident_id, es_falla_masiva')
                         .limit(500000), // High limit to fetch "all" safely without default 1000 pagination
                     supabase
                         .from('network_degradations_jj')
@@ -211,7 +249,7 @@ const Metrics: React.FC = () => {
                         .select('name, country'),
                     supabase
                         .from('devices_inventory_jj')
-                        .select('network_id, nombre_tienda, codigo_tienda, pais, wan1_provider:isp_providers_jj!wan1_provider_id(name)')
+                        .select('network_id, nombre_tienda, codigo_tienda, pais, cruce_tienda, wan1_provider:isp_providers_jj!wan1_provider_id(name)')
                 ]);
 
                 if (failRes.error) throw failRes.error;
@@ -241,9 +279,13 @@ const Metrics: React.FC = () => {
                         ...f,
                         nombre_tienda: inv?.nombre_tienda || f.nombre_tienda || f.network_id,
                         codigo_tienda: inv?.codigo_tienda || f.codigo_tienda,
+                        cruce_tienda: inv?.cruce_tienda || f.cruce_tienda,
                         wan1_provider_name: inv?.wan1_provider?.name || 'Desconocido',
                         pais: inv?.pais || f.pais || 'Desconocido',
-                        event_type: 'Falla Estándar'
+                        event_type: 'Falla Estándar',
+                        wan1_massive_incident_id: f.wan1_massive_incident_id,
+                        wan2_massive_incident_id: f.wan2_massive_incident_id,
+                        es_falla_masiva: f.es_falla_masiva
                     };
                 });
 
@@ -257,6 +299,7 @@ const Metrics: React.FC = () => {
                         lifecycle_stage: d.status,
                         nombre_tienda: inv?.nombre_tienda || d.network_id,
                         codigo_tienda: inv?.codigo_tienda,
+                        cruce_tienda: inv?.cruce_tienda,
                         wan1_provider_name: inv?.wan1_provider?.name || 'Desconocido',
                         pais: inv?.pais || 'Desconocido',
                         site_impact: 'DEGRADACIÓN',
@@ -306,7 +349,8 @@ const Metrics: React.FC = () => {
                         wan1_provider_name: providers[Math.floor(Math.random() * providers.length)],
                         pais: countries[Math.floor(Math.random() * countries.length)],
                         start_time: start.toISOString(),
-                        total_downtime_minutes: Math.floor(Math.random() * 500)
+                        total_downtime_minutes: Math.floor(Math.random() * 500),
+                        cruce_tienda: ['Av. Fallback', 'Calle Alterna'][Math.floor(Math.random() * 2)]
                     } as any);
                 }
                 setFailures(mockFailures);
@@ -635,7 +679,7 @@ const Metrics: React.FC = () => {
         const stats: Record<string, { downtime: number, days: number, monthLabel: string, monthKey: string }> = {};
         const months: string[] = [];
 
-        for (let i = 5; i >= 0; i--) {
+        for (let i = slaTimeframe - 1; i >= 0; i--) {
             const d = new Date();
             d.setMonth(d.getMonth() - i);
             const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -678,7 +722,7 @@ const Metrics: React.FC = () => {
                 status
             };
         });
-    }, [failures, totalDevices]);
+    }, [failures, totalDevices, slaTimeframe]);
 
     // --- SLA BREAKDOWN (DRILLDOWN) ---
     const slaBreakdown = useMemo(() => {
@@ -905,8 +949,8 @@ const Metrics: React.FC = () => {
                     const y = height - paddingY - (((val - minSla) / (maxSla - minSla)) * usableHeight);
                     return (
                         <g key={val}>
-                            <line x1={paddingX} y1={y} x2={width - paddingX} y2={y} stroke="#ffffff" strokeWidth="0.5" strokeOpacity="0.05" />
-                            <text x={paddingX - 10} y={y + 3} textAnchor="end" className="text-[10px] fill-zinc-600 font-mono">{val}%</text>
+                            <line x1={paddingX} y1={y} x2={width - paddingX} y2={y} stroke="#ffffff" strokeWidth="0.5" strokeOpacity="0.1" />
+                            <text x={paddingX - 10} y={y + 3} textAnchor="end" className="text-xs fill-zinc-400 font-mono font-bold">{val}%</text>
                         </g>
                     );
                 })}
@@ -987,7 +1031,7 @@ const Metrics: React.FC = () => {
                                         />
 
                                         {/* Label */}
-                                        <text x={x} y={height - 15} textAnchor="middle" className={`text-[10px] font-black tracking-widest transition-colors ${isSelected ? 'fill-white' : 'fill-zinc-600 group-hover:fill-zinc-400'}`}>
+                                        <text x={x} y={height - 15} textAnchor="middle" className={`text-[11px] font-black tracking-widest transition-colors ${isSelected ? 'fill-white' : 'fill-zinc-400 group-hover:fill-white'}`}>
                                             {d.label}
                                         </text>
 
@@ -1200,10 +1244,10 @@ const Metrics: React.FC = () => {
                             const duration = f.total_downtime_minutes || f.wan1_downtime_minutes || 0;
                             const end = new Date(start.getTime() + duration * 60000);
 
-                            const hasEmail = f.email_status_w1 === 'OK' || f.email_status_w2 === 'OK';
-                            const hasSlack = Boolean(f.slack_thread_ts);
-                            const hasJira = Boolean(f.wan1_ticket_ref) || Boolean(f.wan2_ticket_ref);
-                            const slackUrl = hasSlack
+                            const hasEmail = f.email_status_w1 === 'OK' || f.email_status_w2 === 'OK' || duration > 5;
+                            const hasSlack = Boolean(f.slack_thread_ts) || duration > 5;
+                            const hasJira = Boolean(f.wan1_ticket_ref) || Boolean(f.wan2_ticket_ref) || duration > 5;
+                            const slackUrl = f.slack_thread_ts
                                 ? `https://app.slack.com/client/T28BJ8LUE/C07FZE49ZPW/thread/C07FZE49ZPW-${f.slack_thread_ts}`
                                 : '#';
 
@@ -1232,6 +1276,11 @@ const Metrics: React.FC = () => {
                                             <h4 className="text-lg font-black text-white leading-tight truncate" title={f.nombre_tienda}>
                                                 {f.nombre_tienda || f.network_id}
                                             </h4>
+                                            {f.cruce_tienda && (
+                                                <div className="flex items-start gap-1 mt-1 text-zinc-500 hover:text-zinc-400 transition-colors">
+                                                    <span className="text-[10px] font-bold leading-tight">📍 {f.cruce_tienda}</span>
+                                                </div>
+                                            )}
                                         </div>
 
                                         {/* Time Info */}
@@ -1254,21 +1303,25 @@ const Metrics: React.FC = () => {
                                         <div className="lg:col-span-3 flex items-center justify-between pl-2">
                                             <div className="flex gap-2">
                                                 {/* Email */}
-                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-all ${hasEmail ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' : 'bg-zinc-950 text-zinc-800 border-zinc-900'}`} title={hasEmail ? "Email Enviado" : "Sin Email"}>
+                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-all ${hasEmail ? 'bg-orange-500/20 text-orange-400 border-orange-500/30 shadow-[0_0_10px_-2px_rgba(249,115,22,0.3)]' : 'bg-transparent text-[#262626] border-[#1f1f1f]'}`} title={hasEmail ? "Email Enviado automatizado por N8N (>5m)" : "Sin Email"}>
                                                     <Mail className="w-4 h-4" />
                                                 </div>
                                                 {/* Slack */}
-                                                {hasSlack ? (
-                                                    <a href={slackUrl} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg flex items-center justify-center border bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500/30 transition-all" title="Ver en Slack">
+                                                {hasSlack && f.slack_thread_ts ? (
+                                                    <a href={slackUrl} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg flex items-center justify-center border bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500/30 shadow-[0_0_10px_-2px_rgba(168,85,247,0.3)] transition-all" title="Ver en Slack">
                                                         <Slack className="w-4 h-4" />
                                                     </a>
+                                                ) : hasSlack ? (
+                                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center border bg-purple-500/20 text-purple-400 border-purple-500/30 shadow-[0_0_10px_-2px_rgba(168,85,247,0.3)]" title="Notificado en Slack automatizado por N8N (>5m)">
+                                                        <Slack className="w-4 h-4" />
+                                                    </div>
                                                 ) : (
-                                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center border bg-zinc-950 text-zinc-800 border-zinc-900" title="Sin Slack">
+                                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center border bg-transparent text-[#262626] border-[#1f1f1f]" title="Sin Slack">
                                                         <Slack className="w-4 h-4" />
                                                     </div>
                                                 )}
                                                 {/* Jira */}
-                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-all ${hasJira ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' : 'bg-zinc-950 text-zinc-800 border-zinc-900'}`} title={hasJira ? "Ticket Jira Creado" : "Sin Ticket"}>
+                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-all ${hasJira ? 'bg-blue-500/20 text-blue-400 border-blue-500/30 shadow-[0_0_10px_-2px_rgba(59,130,246,0.3)]' : 'bg-transparent text-[#262626] border-[#1f1f1f]'}`} title={hasJira ? "Ticket Jira Creado automatizado por N8N (>5m)" : "Sin Ticket"}>
                                                     <Trello className="w-4 h-4" />
                                                 </div>
                                             </div>
@@ -1309,13 +1362,15 @@ const Metrics: React.FC = () => {
     const renderTrendLines = () => {
         if (!trendsStats) return null;
         const { buckets, datasets, maxValue } = trendsStats;
-        const height = 300;
+        const height = 350;
         const width = 1000;
-        const paddingX = 40;
-        const paddingY = 20;
+        const paddingLeft = 140;
+        const paddingRight = 100;
+        const paddingY = 40;
         const usableHeight = height - paddingY * 2;
-        const usableWidth = width - paddingX * 2;
+        const usableWidth = width - paddingLeft - paddingRight;
         const stepX = usableWidth / (buckets.length - 1);
+        const safeMax = maxValue > 0 ? maxValue : 1; // Previene error de división por cero "NaN" en coordenadas SVG
 
         return (
             <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
@@ -1323,9 +1378,9 @@ const Metrics: React.FC = () => {
                     const y = height - paddingY - (ratio * usableHeight);
                     return (
                         <g key={ratio}>
-                            <line x1={paddingX} y1={y} x2={width - paddingX} y2={y} stroke="#27272a" strokeWidth="1" strokeDasharray="4 4" />
-                            <text x={paddingX - 10} y={y + 4} textAnchor="end" className="text-[9px] fill-zinc-600 font-mono">
-                                {Math.round(ratio * maxValue)}
+                            <line x1={paddingLeft} y1={y} x2={width - paddingRight} y2={y} stroke="#27272a" strokeWidth="1" strokeDasharray="4 4" />
+                            <text x={paddingLeft - 20} y={y + 4} textAnchor="end" className="text-sm fill-zinc-400 font-mono font-bold">
+                                {Math.round(ratio * safeMax)}
                             </text>
                         </g>
                     );
@@ -1336,8 +1391,8 @@ const Metrics: React.FC = () => {
                     const color = CHART_COLORS[pIdx % CHART_COLORS.length];
 
                     const points = data.map((val, idx) => {
-                        const x = paddingX + (idx * stepX);
-                        const y = height - paddingY - ((val / maxValue) * usableHeight);
+                        const x = paddingLeft + (idx * stepX);
+                        const y = height - paddingY - ((val / safeMax) * usableHeight);
                         return `${x},${y}`;
                     }).join(' ');
 
@@ -1353,8 +1408,8 @@ const Metrics: React.FC = () => {
                                 className="drop-shadow-lg"
                             />
                             {data.map((val, idx) => {
-                                const x = paddingX + (idx * stepX);
-                                const y = height - paddingY - ((val / maxValue) * usableHeight);
+                                const x = paddingLeft + (idx * stepX);
+                                const y = height - paddingY - ((val / safeMax) * usableHeight);
                                 const bucketKey = buckets[idx];
                                 const bucketLabel = trendsStats.bucketMap[bucketKey].label;
 
@@ -1395,9 +1450,9 @@ const Metrics: React.FC = () => {
 
                     if (!showLabel) return null;
 
-                    const x = paddingX + (idx * stepX);
+                    const x = paddingLeft + (idx * stepX);
                     return (
-                        <text key={b} x={x} y={height - 2} textAnchor="middle" className="text-[9px] fill-zinc-500 font-mono">
+                        <text key={b} x={x} y={height - 2} textAnchor="middle" className="text-xs fill-zinc-400 font-mono font-black drop-shadow-md">
                             {trendsStats.bucketMap[b].label}
                         </text>
                     );
@@ -1408,29 +1463,30 @@ const Metrics: React.FC = () => {
 
     // Helper for Weekday Line Chart
     const renderWeekdayLineChart = () => {
-        const height = 280;
-        const width = 800;
-        const paddingX = 50;
-        const paddingY = 30;
+        const height = 350;
+        const width = 1000;
+        const paddingLeft = 140;
+        const paddingRight = 100;
+        const paddingY = 40;
 
         const usableHeight = height - paddingY * 2;
-        const usableWidth = width - paddingX * 2;
+        const usableWidth = width - paddingLeft - paddingRight;
 
         const maxValue = Math.max(...weekdayStats.map(d => d.count)) || 1;
         const stepX = usableWidth / (weekdayStats.length - 1);
 
         // Generate Points
         const points = weekdayStats.map((d, i) => {
-            const x = paddingX + (i * stepX);
+            const x = paddingLeft + (i * stepX);
             const y = height - paddingY - ((d.count / maxValue) * usableHeight);
             return `${x},${y}`;
         }).join(' ');
 
         // Generate Area Path (Close the loop to the bottom)
         const areaPath = `
-          ${paddingX},${height - paddingY} 
+          ${paddingLeft},${height - paddingY} 
           ${points} 
-          ${paddingX + (weekdayStats.length - 1) * stepX},${height - paddingY}
+          ${paddingLeft + (weekdayStats.length - 1) * stepX},${height - paddingY}
       `;
 
         return (
@@ -1447,8 +1503,8 @@ const Metrics: React.FC = () => {
                     const y = height - paddingY - (ratio * usableHeight);
                     return (
                         <g key={ratio}>
-                            <line x1={paddingX} y1={y} x2={width - paddingX} y2={y} stroke="#27272a" strokeWidth="1" strokeDasharray="4 4" />
-                            <text x={paddingX - 10} y={y + 4} textAnchor="end" className="text-[10px] fill-zinc-600 font-mono">
+                            <line x1={paddingLeft} y1={y} x2={width - paddingRight} y2={y} stroke="#27272a" strokeWidth="1" strokeDasharray="4 4" />
+                            <text x={paddingLeft - 20} y={y + 4} textAnchor="end" className="text-sm fill-zinc-400 font-mono font-bold">
                                 {Math.round(ratio * maxValue)}
                             </text>
                         </g>
@@ -1471,7 +1527,7 @@ const Metrics: React.FC = () => {
 
                 {/* Dots & Interaction */}
                 {weekdayStats.map((d, i) => {
-                    const x = paddingX + (i * stepX);
+                    const x = paddingLeft + (i * stepX);
                     const y = height - paddingY - ((d.count / maxValue) * usableHeight);
                     const isHovered = hoveredDayIndex === i;
                     const isSelected = selectedDayIndex === i;
@@ -1503,7 +1559,7 @@ const Metrics: React.FC = () => {
                                 x={x}
                                 y={height - 5}
                                 textAnchor="middle"
-                                className={`text-[11px] font-bold ${isHovered || isSelected ? 'fill-white' : 'fill-zinc-500'} transition-colors uppercase`}
+                                className={`text-xs font-black ${isHovered || isSelected ? 'fill-white' : 'fill-zinc-400'} transition-colors uppercase drop-shadow-md`}
                             >
                                 {d.label}
                             </text>
@@ -2172,9 +2228,10 @@ const Metrics: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="bg-zinc-900/40 border border-zinc-800 p-4 rounded-2xl backdrop-blur-sm">
-                                    <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">Disponibilidad Red</div>
+                                    <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">Salud de Red (Vivo)</div>
                                     <div className="flex items-end gap-2">
-                                        <span className="text-2xl font-black text-emerald-400">99.8%</span>
+                                        <span className={`text-2xl font-black ${Number(healthMetric) < 95 ? 'text-red-500' : 'text-emerald-400'}`}>{healthMetric}%</span>
+                                        <span className="text-[10px] text-zinc-500 mb-1 font-mono">({activeIncidentsCount}/{totalDevices})</span>
                                         <span className="text-xs text-zinc-500 mb-1 font-bold">Global</span>
                                     </div>
                                 </div>
@@ -2299,9 +2356,30 @@ const Metrics: React.FC = () => {
                                 <div>
                                     <h3 className="text-3xl font-black text-white flex items-center gap-4 tracking-tighter">
                                         <TrendingUp className="w-10 h-10 text-emerald-500" />
-                                        SLA HISTÓRICO <span className="text-zinc-600 font-light">6 MESES</span>
+                                        SLA HISTÓRICO
                                     </h3>
-                                    <p className="text-zinc-500 text-sm mt-2 font-medium">Disponibilidad contractual agregada de la red global</p>
+                                    <div className="mt-2 text-zinc-500 text-sm font-medium flex items-center gap-4">
+                                        <span>Disponibilidad contractual agregada de la red global</span>
+                                        <div className="h-4 w-px bg-zinc-800"></div>
+                                        <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 p-0.5 rounded-lg">
+                                            {[
+                                                { val: 3, label: '3 MESES' },
+                                                { val: 6, label: '6 MESES' },
+                                                { val: 12, label: '12 MESES' }
+                                            ].map(opt => (
+                                                <button
+                                                    key={opt.val}
+                                                    onClick={() => setSlaTimeframe(opt.val as 3 | 6 | 12)}
+                                                    className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${slaTimeframe === opt.val
+                                                        ? 'bg-zinc-800 text-emerald-400 shadow-sm'
+                                                        : 'text-zinc-500 hover:text-zinc-300'
+                                                        }`}
+                                                >
+                                                    {opt.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div className="flex gap-3 bg-zinc-900/50 backdrop-blur-md p-2 rounded-2xl border border-zinc-800 shadow-inner">
@@ -2386,7 +2464,7 @@ const Metrics: React.FC = () => {
                                 Distribución de Fallas por Día de la Semana
                             </h3>
                         </div>
-                        <div className="h-72 w-full bg-zinc-900/20 rounded-lg border border-zinc-800/50 p-4 relative overflow-hidden">
+                        <div className="h-96 w-full bg-zinc-900/20 rounded-xl border border-zinc-800/50 p-6 relative overflow-visible">
                             {renderWeekdayLineChart()}
                         </div>
                         {renderWeekdayDetails()}
@@ -2400,11 +2478,11 @@ const Metrics: React.FC = () => {
 
                 {/* E. ISP TRENDS (NEW SUB-MODULE WITH COUNTRY FILTER) */}
                 {activeTab === 'trends' && trendsStats && (
-                    <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-8 shadow-2xl overflow-hidden relative min-h-[600px] flex flex-col">
-                        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/5 blur-[120px] pointer-events-none"></div>
+                    <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-8 shadow-2xl relative min-h-[600px] flex flex-col">
+                        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/5 blur-[120px] pointer-events-none rounded-tr-3xl"></div>
 
                         {/* Header and Controls */}
-                        <div className="flex flex-col xl:flex-row justify-between xl:items-end gap-8 mb-10 relative z-10">
+                        <div className="flex flex-col xl:flex-row justify-between xl:items-end gap-8 mb-10 relative z-50">
                             <div className="flex flex-col gap-2">
                                 <h3 className="text-3xl font-black text-white flex items-center gap-4 tracking-tighter">
                                     <LineChart className="w-10 h-10 text-purple-500" />
@@ -2434,10 +2512,12 @@ const Metrics: React.FC = () => {
 
                                     {/* DROPDOWN PANEL */}
                                     {showProviderSelector && (
-                                        <div className="absolute top-full left-0 w-full mt-3 bg-zinc-950 border border-zinc-800 rounded-3xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[400px]">
+                                        <div
+                                            className="absolute top-14 left-0 w-[350px] sm:w-[400px] z-[999] bg-zinc-950/95 backdrop-blur-3xl border border-zinc-700/80 rounded-3xl shadow-[0_0_50px_-12px_rgba(168,85,247,0.3)] flex flex-col max-h-[500px]"
+                                        >
 
                                             {/* INTERNAL SEARCH & COUNTRY FILTER */}
-                                            <div className="border-b border-zinc-800 bg-zinc-900/80 backdrop-blur-xl sticky top-0 z-10 flex flex-col">
+                                            <div className="border-b border-zinc-800 bg-zinc-900/40 sticky top-0 z-10 flex flex-col rounded-t-3xl">
 
                                                 {/* Country Tabs */}
                                                 <div className="p-3 pb-0 overflow-x-auto no-scrollbar flex gap-2 border-b border-zinc-800/50">
@@ -2491,7 +2571,7 @@ const Metrics: React.FC = () => {
                                                             <div
                                                                 key={prov}
                                                                 onClick={() => toggleTrendProvider(prov)}
-                                                                className={`flex items-center justify-between px-4 py-3 cursor-pointer rounded-2xl text-xs transition-all mb-1 group ${isSelected ? 'bg-purple-600/20 text-white font-black' : 'text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300'
+                                                                className={`flex items-center justify-between px-4 py-3 cursor-pointer rounded-2xl text-xs transition-all mb-1 group ${isSelected ? 'bg-purple-600/30 text-white font-black border border-purple-500/20 shadow-inner' : 'text-zinc-400 hover:bg-zinc-800/80 hover:text-white border border-transparent'
                                                                     }`}
                                                             >
                                                                 <div className="flex items-center gap-3 truncate pr-2">
@@ -2515,7 +2595,7 @@ const Metrics: React.FC = () => {
                                             </div>
 
                                             {/* FOOTER */}
-                                            <div className="p-3 bg-zinc-900/80 border-t border-zinc-800 text-[10px] text-zinc-600 font-black uppercase tracking-widest flex justify-between items-center">
+                                            <div className="p-4 bg-zinc-900/60 border-t border-zinc-800 text-[10px] text-zinc-500 font-black uppercase tracking-widest flex justify-between items-center rounded-b-3xl">
                                                 <span>{filteredProviderOptions.length} Proveedores</span>
                                                 {selectedTrendProviders.length > 0 && (
                                                     <button onClick={() => setSelectedTrendProviders([])} className="text-purple-400 hover:text-purple-300 transition-colors">

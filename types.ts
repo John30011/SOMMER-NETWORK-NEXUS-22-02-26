@@ -9,6 +9,7 @@ export interface NetworkFailure {
   network_id: string;
   nombre_tienda?: string;
   codigo_tienda?: string; // NEW FIELD added for display
+  cruce_tienda?: string;  // NEW FIELD for geographical context
   meraki_url?: string; // NEW FIELD for direct link
 
   // New fields for UI enhancement

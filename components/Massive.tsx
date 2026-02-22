@@ -142,6 +142,7 @@ const Massive: React.FC = () => {
 
     useEffect(() => {
         fetchData();
+        const intervalId = setInterval(() => fetchData(true), 60000); // Auto refresh en tiempo real cada 1 min
 
         const handleClickOutside = (event: MouseEvent) => {
             if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
@@ -149,11 +150,14 @@ const Massive: React.FC = () => {
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+            clearInterval(intervalId);
+        };
     }, []);
 
-    const fetchData = async () => {
-        setLoading(true);
+    const fetchData = async (isBackgroundSync = false) => {
+        if (!isBackgroundSync) setLoading(true);
         try {
             if (isDemoMode) {
                 setIncidents([
