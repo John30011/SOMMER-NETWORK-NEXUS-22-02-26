@@ -1609,14 +1609,14 @@ const Metrics: React.FC = () => {
         if (!showHelp || !content) return null;
 
         return (
-            <div className="bg-blue-900/10 border border-blue-900/30 rounded-lg p-4 mb-6 animate-in fade-in slide-in-from-top-2 relative">
+            <div className="bg-transparent border border-zinc-900/50 rounded-lg p-4 mb-6 animate-in fade-in slide-in-from-top-2 relative">
                 <button
                     onClick={() => setShowHelp(false)}
-                    className="absolute top-2 right-2 text-zinc-500 hover:text-blue-400"
+                    className="absolute top-2 right-2 text-zinc-600 hover:text-blue-500"
                 >
                     <X className="w-4 h-4" />
                 </button>
-                <h4 className="text-blue-400 font-bold mb-3 flex items-center gap-2 text-sm">
+                <h4 className="text-blue-500 font-bold mb-3 flex items-center gap-2 text-sm tracking-wide">
                     <Lightbulb className="w-4 h-4" /> {content.title}
                 </h4>
                 <ul className="space-y-2">

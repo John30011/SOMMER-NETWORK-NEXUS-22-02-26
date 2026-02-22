@@ -370,8 +370,8 @@ const Massive: React.FC = () => {
                     <button
                         onClick={() => setShowCalendar(!showCalendar)}
                         className={`w-full md:w-48 flex items-center justify-between px-3 py-2 rounded-lg border transition-all text-sm ${dateRange.start
-                                ? 'bg-zinc-900 border-red-500/50 text-white ring-1 ring-red-500/20'
-                                : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                            ? 'bg-zinc-900 border-red-500/50 text-white ring-1 ring-red-500/20'
+                            : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700'
                             }`}
                     >
                         <div className="flex items-center gap-2 truncate">
@@ -463,6 +463,9 @@ const Massive: React.FC = () => {
                                                             key={incident.id}
                                                             incident={incident}
                                                             affectedFailures={affected}
+                                                            onStatusChange={() => {
+                                                                fetchData(); // Force refresh on status change
+                                                            }}
                                                         />
                                                     );
                                                 })}

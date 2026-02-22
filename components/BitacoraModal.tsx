@@ -13,6 +13,7 @@ interface BitacoraModalProps {
     onNavigateToLogin?: () => void;
     readOnly?: boolean;
     tableName?: string; // To support 'massive_incidents_jj' or 'network_failures_jj'
+    onStatusChange?: (newStatus: string) => void;
 }
 
 interface LogEntry {
@@ -37,7 +38,8 @@ const BitacoraModal: React.FC<BitacoraModalProps> = ({
     onClose,
     onNavigateToLogin,
     readOnly = false,
-    tableName = 'network_failures_jj'
+    tableName = 'network_failures_jj',
+    onStatusChange
 }) => {
     const [notes, setNotes] = useState<LogEntry[]>([]);
     const [newNote, setNewNote] = useState('');
@@ -277,38 +279,49 @@ const BitacoraModal: React.FC<BitacoraModalProps> = ({
                 }
             }
 
-            // FIX: STRICTLY FILTER EXISTING NOTES to avoid "Corrupt Record" UI error
-            // This ensures that even if DB has bad data, we only keep valid objects in the new array
+            // Si es un Cierre de Caso Masivo (Lógica explícita del usuario)
+            if (closeCase && tableName === 'massive_incidents_jj') {
+                const liability = getLiability(rootCause);
+                const massiveIdNum = typeof failureId === 'string' ? parseInt(failureId, 10) : failureId;
+
+                const { data, error } = await supabase.rpc('close_massive_incident_jj', {
+                    p_massive_id: massiveIdNum,
+                    p_root_cause: rootCause,
+                    p_liability: liability,
+                    p_closure_note: safeNote,
+                    p_closed_by_user: currentUser
+                });
+
+                if (error) {
+                    console.error("Error al ejecutar el cierre en cascada:", error);
+                    alert("Error en la BD al cerrar: " + error.message);
+                    setSaving(false);
+                    return;
+                } else {
+                    console.log("Cierre exitoso:", data);
+                    // Actualizar UI local para reflejar el cierre
+                    setNewNote('');
+
+                    // Si tenemos onStatusChange, forzará al padre a llamar fetchData y auto-limpiarse visualmente
+                    if (onStatusChange) {
+                        onStatusChange('Resuelta');
+                    }
+                    setTimeout(() => onClose(), 800);
+                    setSaving(false);
+                    return; // IMPORTANTE: Cortamos la ejecución aquí, porque el RPC ya hizo todos los Updates (Padre + Hijos + Logs)
+                }
+            }
+
+            // Para Agregar Nota Simple a Masivas o Cerrar/Nota Individual
             const validExistingNotes = currentNotes.filter(item =>
                 item && typeof item === 'object' && typeof item.log === 'string'
             );
 
             const updatedNotes = [newEntry, ...validExistingNotes];
-
             let updatePayload: any = { [textColumn]: updatedNotes };
 
-            // If Closing Case, add extra fields
-            if (closeCase) {
+            if (closeCase && tableName === 'network_failures_jj') {
                 const liability = getLiability(rootCause);
-
-                if (tableName === 'massive_incidents_jj') {
-                    const massiveIdNum = typeof failureId === 'string' ? parseInt(failureId, 10) : failureId;
-                    const { data, error: rpcError } = await supabase.rpc('close_massive_incident_jj', {
-                        p_massive_id: massiveIdNum,
-                        p_root_cause: rootCause,
-                        p_liability: liability,
-                        p_closure_note: safeNote,
-                        p_closed_by_user: currentUser
-                    });
-
-                    if (rpcError) {
-                        console.error("Error cerrando masiva:", rpcError);
-                        throw rpcError;
-                    } else {
-                        console.log("Resultado del cierre en cascada:", data);
-                    }
-                }
-
                 updatePayload = {
                     ...updatePayload,
                     lifecycle_stage: 'Resuelta',
@@ -320,15 +333,19 @@ const BitacoraModal: React.FC<BitacoraModalProps> = ({
                 };
             }
 
-            const { error } = await supabase
-                .from(tableName)
+            const { error: normalUpdateError } = await supabase
+                .from(tableName!)
                 .update(updatePayload)
                 .eq('id', failureId);
 
-            if (error) throw error;
+            if (normalUpdateError) throw normalUpdateError;
 
             setNewNote('');
             setNotes(sortNotesDescending(updatedNotes));
+
+            if (onStatusChange && updatePayload.status) {
+                onStatusChange(updatePayload.status);
+            }
 
             if (closeCase) {
                 setTimeout(() => onClose(), 1000);
@@ -411,10 +428,10 @@ const BitacoraModal: React.FC<BitacoraModalProps> = ({
                 {/* Card Content */}
                 <div className="flex-1 pb-6 min-w-0">
                     <div className={`rounded-xl border p-3.5 transition-all relative overflow-hidden ${isChecklist
-                            ? 'bg-zinc-900/80 border-purple-500/30 shadow-sm'
-                            : isSystem
-                                ? 'bg-zinc-900/30 border-zinc-800 text-zinc-400'
-                                : 'bg-zinc-900/60 border-zinc-700/50 hover:border-zinc-600 shadow-sm'
+                        ? 'bg-zinc-900/80 border-purple-500/30 shadow-sm'
+                        : isSystem
+                            ? 'bg-zinc-900/30 border-zinc-800 text-zinc-400'
+                            : 'bg-zinc-900/60 border-zinc-700/50 hover:border-zinc-600 shadow-sm'
                         }`}>
                         {/* Decorative gradient for checklist */}
                         {isChecklist && <div className="absolute top-0 left-0 w-1 h-full bg-purple-500"></div>}
@@ -556,8 +573,8 @@ const BitacoraModal: React.FC<BitacoraModalProps> = ({
                                         if (!newVal) setRootCause(''); // Reset if toggled off
                                     }}
                                     className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all ${closeCase
-                                            ? 'bg-green-900/20 text-green-400 border-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.2)]'
-                                            : 'bg-zinc-950 text-zinc-500 border-zinc-800 hover:border-zinc-700'
+                                        ? 'bg-green-900/20 text-green-400 border-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.2)]'
+                                        : 'bg-zinc-950 text-zinc-500 border-zinc-800 hover:border-zinc-700'
                                         }`}
                                 >
                                     <CheckCircle2 className="w-3 h-3" />
@@ -588,8 +605,8 @@ const BitacoraModal: React.FC<BitacoraModalProps> = ({
                                                                 setIsRootCauseOpen(false);
                                                             }}
                                                             className={`w-full text-left px-3 py-2 text-[10px] rounded-lg transition-colors flex items-center justify-between group ${rootCause === opt
-                                                                    ? 'bg-green-500/10 text-green-400 font-medium border border-green-500/20'
-                                                                    : 'text-zinc-300 hover:bg-zinc-900 hover:text-white border border-transparent'
+                                                                ? 'bg-green-500/10 text-green-400 font-medium border border-green-500/20'
+                                                                : 'text-zinc-300 hover:bg-zinc-900 hover:text-white border border-transparent'
                                                                 }`}
                                                         >
                                                             <span>{opt}</span>
@@ -630,8 +647,8 @@ const BitacoraModal: React.FC<BitacoraModalProps> = ({
                                         onClick={handleSave}
                                         disabled={saving || (!newNote.trim())}
                                         className={`p-2.5 rounded-lg transition-all shadow-lg flex items-center justify-center ${(newNote.trim())
-                                                ? 'bg-blue-600 hover:bg-blue-500 text-white cursor-pointer active:scale-95'
-                                                : 'bg-zinc-900 text-zinc-700 cursor-not-allowed border border-zinc-800'
+                                            ? 'bg-blue-600 hover:bg-blue-500 text-white cursor-pointer active:scale-95'
+                                            : 'bg-zinc-900 text-zinc-700 cursor-not-allowed border border-zinc-800'
                                             }`}
                                     >
                                         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
