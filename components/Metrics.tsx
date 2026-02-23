@@ -249,10 +249,18 @@ const Metrics: React.FC = () => {
                         .select('name, country'),
                     supabase
                         .from('devices_inventory_jj')
-                        .select('network_id, nombre_tienda, codigo_tienda, pais, cruce_tienda, wan1_provider:isp_providers_jj!wan1_provider_id(name)')
+                        .select('network_id, nombre_tienda, codigo_tienda, pais, wan1_provider:isp_providers_jj!wan1_provider_id(name)')
+                        .limit(500000) // Increased limit
                 ]);
 
                 if (failRes.error) throw failRes.error;
+                if (degRes.error) console.error("Metrics: Degradations fetch error", degRes.error);
+                if (masRes.error) console.error("Metrics: Massive fetch error", masRes.error);
+                if (invRes.error) {
+                    console.error("Metrics: Inventory fetch error", invRes.error);
+                    // Critical failure for mapping, throw to show warning
+                    throw new Error("Error cargando inventario para resolución de nombres");
+                }
 
                 const dbData = failRes.data || [];
                 const degData = degRes.data || [];
@@ -274,12 +282,13 @@ const Metrics: React.FC = () => {
 
                 // Map standard failures
                 const mappedFailures = dbData.map((f: any) => {
-                    const inv = invData.find((i: any) => i.network_id === f.network_id);
+                    // Robust mapping: Convert network_id to string, trim whitespace, and convert to uppercase for comparison
+                    const fId = String(f.network_id || '').toUpperCase().trim();
+                    const inv = invData.find((i: any) => String(i.network_id || '').toUpperCase().trim() === fId);
                     return {
                         ...f,
                         nombre_tienda: inv?.nombre_tienda || f.nombre_tienda || f.network_id,
                         codigo_tienda: inv?.codigo_tienda || f.codigo_tienda,
-                        cruce_tienda: inv?.cruce_tienda || f.cruce_tienda,
                         wan1_provider_name: inv?.wan1_provider?.name || 'Desconocido',
                         pais: inv?.pais || f.pais || 'Desconocido',
                         event_type: 'Falla Estándar',
@@ -291,7 +300,9 @@ const Metrics: React.FC = () => {
 
                 // Map degradations
                 const mappedDegradations = degData.map((d: any) => {
-                    const inv = invData.find((i: any) => i.network_id === d.network_id);
+                    // Robust mapping: Convert network_id to string, trim whitespace, and convert to uppercase for comparison
+                    const dId = String(d.network_id || '').toUpperCase().trim();
+                    const inv = invData.find((i: any) => String(i.network_id || '').toUpperCase().trim() === dId);
                     return {
                         id: `deg-${d.id}`,
                         network_id: d.network_id,
@@ -299,7 +310,6 @@ const Metrics: React.FC = () => {
                         lifecycle_stage: d.status,
                         nombre_tienda: inv?.nombre_tienda || d.network_id,
                         codigo_tienda: inv?.codigo_tienda,
-                        cruce_tienda: inv?.cruce_tienda,
                         wan1_provider_name: inv?.wan1_provider?.name || 'Desconocido',
                         pais: inv?.pais || 'Desconocido',
                         site_impact: 'DEGRADACIÓN',
