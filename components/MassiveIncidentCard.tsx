@@ -1,18 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { MassiveIncident, NetworkFailure } from '../types';
-import { Zap, Globe, Store, Clock, AlertTriangle, Undo2, Calendar, TrendingUp, Notebook, Mail, Slack, Trello } from 'lucide-react';
+import { Zap, Globe, Store, Clock, AlertTriangle, Undo2, Calendar, TrendingUp, Notebook, Mail, Slack, Trello, MapPinned } from 'lucide-react';
 import BitacoraModal from './BitacoraModal';
-
 interface MassiveIncidentCardProps {
     incident: MassiveIncident;
     affectedFailures?: NetworkFailure[];
     isAutoFlipped?: boolean;
     onNavigateToLogin?: () => void;
     onStatusChange?: (newStatus: string) => void;
+    onOpenMap?: () => void;
 }
 
-const MassiveIncidentCard: React.FC<MassiveIncidentCardProps> = ({ incident, affectedFailures = [], isAutoFlipped = false, onNavigateToLogin, onStatusChange }) => {
+const MassiveIncidentCard: React.FC<MassiveIncidentCardProps> = ({ incident, affectedFailures = [], isAutoFlipped = false, onNavigateToLogin, onStatusChange, onOpenMap }) => {
     const [elapsed, setElapsed] = useState('');
     const [isManualFlipped, setIsManualFlipped] = useState(false);
     const [showBitacora, setShowBitacora] = useState(false);
@@ -81,7 +81,7 @@ const MassiveIncidentCard: React.FC<MassiveIncidentCardProps> = ({ incident, aff
     return (
         // CONTAINER WRAPPER with dynamic height transition
         <div
-            className={`perspective-1000 group w-full cursor-pointer relative select-none transition-[height] duration-500 ease-in-out ${isFlipped ? 'h-[500px]' : 'h-[170px]'}`}
+            className={`perspective-1000 group w-full cursor-pointer relative select-none transition-[height] duration-500 ease-in-out ${isFlipped ? 'h-[500px]' : 'h-[200px]'}`}
             onClick={handleCardClick}
         >
             <div className={`relative w-full h-full transition-all duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
@@ -119,8 +119,8 @@ const MassiveIncidentCard: React.FC<MassiveIncidentCardProps> = ({ incident, aff
                     </div>
 
                     {/* --- MIDDLE ROW: PROVIDER TITLE --- */}
-                    <div className="relative z-10 flex flex-col justify-center flex-1 min-h-0">
-                        <h1 className="text-3xl font-black uppercase leading-none tracking-tight drop-shadow-md truncate" title={incident.provider_name}>
+                    <div className="relative z-10 flex flex-col justify-start flex-1 min-h-0 pt-4 pb-1">
+                        <h1 className="text-2xl md:text-3xl font-black uppercase leading-tight tracking-tight drop-shadow-md line-clamp-2" title={incident.provider_name}>
                             {incident.provider_name}
                         </h1>
                         <div className="flex items-center gap-1.5 mt-1 text-red-100/90">
@@ -132,14 +132,33 @@ const MassiveIncidentCard: React.FC<MassiveIncidentCardProps> = ({ incident, aff
                     {/* --- BOTTOM ROW: METRICS & ACTION --- */}
                     <div className="relative z-10 flex items-end justify-between border-t border-white/20 pt-2 mt-auto">
 
-                        {/* Affected Count */}
-                        <div>
-                            <span className="block text-[9px] font-bold uppercase tracking-widest opacity-80 mb-0.5">
+                        {/* Affected Count & Map Action - ALIGNED HORIZONTALLY */}
+                        <div className="flex flex-col gap-1">
+                            <span className="block text-[9px] font-bold uppercase tracking-widest opacity-80">
                                 Tiendas Afectadas
                             </span>
-                            <div className="flex items-center gap-2">
-                                <Store className="w-5 h-5" />
-                                <span className="text-3xl font-black leading-none">{affectedCount}</span>
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-1.5">
+                                    <Store className="w-5 h-5" />
+                                    <span className="text-3xl font-black leading-none">{affectedCount}</span>
+                                </div>
+
+                                {/* Option 1: Quick Map Access Button */}
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (onOpenMap) onOpenMap();
+                                    }}
+                                    className={`flex items-center gap-1.5 w-max px-2.5 py-1.5 rounded-lg border transition-all text-[10px] font-bold uppercase tracking-wider shadow-sm 
+                                        ${affectedFailures.some(f => f.coordenadas_geo)
+                                            ? 'bg-red-950/40 text-red-200 border-red-500/30 hover:bg-red-900/60 hover:border-red-500/50 hover:shadow-[0_0_10px_rgba(239,68,68,0.3)]'
+                                            : 'bg-black/20 text-white/50 border-white/10 opacity-50 cursor-not-allowed'
+                                        } pointer-events-auto`}
+                                    title={affectedFailures.some(f => f.coordenadas_geo) ? 'Ver Impacto en Mapa' : 'Sin coordenadas registradas'}
+                                >
+                                    <MapPinned className="w-3.5 h-3.5" />
+                                    Mapa
+                                </button>
                             </div>
                         </div>
 
@@ -333,18 +352,20 @@ const MassiveIncidentCard: React.FC<MassiveIncidentCardProps> = ({ incident, aff
             </div>
 
             {/* Modal Bitacora */}
-            {showBitacora && (
-                <BitacoraModal
-                    failureId={incident.id}
-                    networkId={String(incident.id)} // Use Massive Incident ID as Network ID proxy for display
-                    storeName={`${incident.provider_name} (${incident.country})`}
-                    onClose={() => setShowBitacora(false)}
-                    tableName='massive_incidents_jj' // Target massive incidents table
-                    onNavigateToLogin={onNavigateToLogin}
-                    onStatusChange={onStatusChange}
-                />
-            )}
-        </div>
+            {
+                showBitacora && (
+                    <BitacoraModal
+                        failureId={incident.id}
+                        networkId={String(incident.id)} // Use Massive Incident ID as Network ID proxy for display
+                        storeName={`${incident.provider_name} (${incident.country})`}
+                        onClose={() => setShowBitacora(false)}
+                        tableName='massive_incidents_jj' // Target massive incidents table
+                        onNavigateToLogin={onNavigateToLogin}
+                        onStatusChange={onStatusChange}
+                    />
+                )
+            }
+        </div >
     );
 };
 

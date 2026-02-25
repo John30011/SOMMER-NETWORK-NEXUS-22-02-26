@@ -1,0 +1,1949 @@
+{
+  "name": "01 - Nexus : Detección",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -272,
+        128
+      ],
+      "id": "3214ac61-da47-45c7-a744-f6022e4e4d1c",
+      "name": "Cron: Cada Minuto"
+    },
+    {
+      "parameters": {
+        "url": "https://api.meraki.com/api/v1/organizations/1151666/appliance/uplink/statuses",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ciscoMerakiApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -16,
+        128
+      ],
+      "id": "310a9fba-f842-4512-bcd6-e25c74e5fe05",
+      "name": "Meraki: Obtener Estados Uplink",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wXVhrJbOPKc34rz4",
+          "name": "Slack: Nexus"
+        },
+        "ciscoMerakiApi": {
+          "id": "bMWpqlv7ApZ8gayT",
+          "name": "Cisco Meraki account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = new Map();\n\nfor (const item of items) {\n  const device = item.json;\n  if (!device.networkId) continue;\n\n  // Inicializar mapa si es la primera vez que vemos esta red\n  if (!results.has(device.networkId)) {\n    results.set(device.networkId, {\n      network_id: device.networkId,\n      serial: device.serial,\n      wan1_status: 'not connected',\n      wan2_status: 'not connected',\n      wan1_log: { status: 'not connected', msg: 'No reportado' },\n      wan2_log: { status: 'not connected', msg: 'No reportado' }\n    });\n  }\n\n  const entry = results.get(device.networkId);\n\n  if (device.uplinks && Array.isArray(device.uplinks)) {\n    const w1 = device.uplinks.find(u => u.interface === 'wan1');\n    const w2 = device.uplinks.find(u => u.interface === 'wan2');\n\n    if (w1) {\n        entry.wan1_status = w1.status;\n        entry.wan1_log = w1; \n    }\n    if (w2) {\n        entry.wan2_status = w2.status;\n        entry.wan2_log = w2;\n    }\n  }\n}\n\nreturn Array.from(results.values()).map(r => ({ json: r }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        128
+      ],
+      "id": "61483026-ef4e-43e3-8071-e32a84f51962",
+      "name": "Code: Agrupar por Sitio"
+    },
+    {
+      "parameters": {
+        "batchSize": 50,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        560,
+        128
+      ],
+      "id": "f30efaed-1fe9-4bcc-ba80-e910d76bcd40",
+      "name": "Split In Batches"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT public.process_site_health_jj(\n    $1, $2, $3, $4, $5\n) as resultado_accion;",
+        "options": {
+          "queryReplacement": "={{ [ $json.network_id, $json.wan1_status, $json.wan2_status, JSON.stringify($json.wan1_log), JSON.stringify($json.wan2_log) ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        672,
+        304
+      ],
+      "id": "13731b48-c6d8-4e15-bba5-e088af6880ab",
+      "name": "Supabase: Procesar Salud",
+      "credentials": {
+        "postgres": {
+          "id": "zv3CvTQjUWmJmOVa",
+          "name": "SOMMER NETWORK NEXUS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1344,
+        -896
+      ],
+      "id": "0ebfc9c5-a320-4b31-9ab5-de835be11649",
+      "name": "Loop: Crisis"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// 1. Leemos los datos del ÍTEM ACTUAL (Singular)\nconst input = item.json.resultado_accion;\n\n// 2. Lógica de BMC:\n// Si el SQL nos devolvió un ticket existente (rescate), lo usamos.\n// Si no, generamos uno nuevo \"INC-XXXXXX\".\nconst ticket = input.existing_ticket || ('INC-' + Math.floor(Math.random() * 900000 + 100000));\n\n// 3. Retornamos el ítem enriquecido\nreturn {\n  json: {\n    ...item.json, // Mantenemos toda la data original\n    ticket_bmc: ticket,\n    bmc_status: \"Created (Simulated)\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1728,
+        -880
+      ],
+      "id": "812bc835-a33b-4dc9-84f7-c0a15643e7d6",
+      "name": "Code: Simular BMC"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Usamos 'item' (Singular)\nconst data = item.json.resultado_accion;\nconst ticket = item.json.ticket_bmc; // Este viene del nodo anterior\n\nlet emailLog = \"\";\n\n// Lógica de Notificación al Proveedor\n// Si es TOTAL -> Se asume notificación crítica.\n// Si es PARCIAL -> Se notifica al proveedor específico caído.\nlet proveedor = \"Múltiple\";\nif (data.w1_down && !data.w2_down) proveedor = data.prov1_name;\nif (!data.w1_down && data.w2_down) proveedor = data.prov2_name;\n\nconst asunto = `Falla ${data.impact} - ${data.store_name} - Ticket ${ticket}`;\n\n// Mensaje de bitácora\nemailLog = `Se ha generado el Ticket BMC ${ticket}. Se envió reporte a ${proveedor || 'Proveedor'} con asunto: \"${asunto}\".`;\n\nreturn {\n  json: {\n    ...item.json,\n    email_log_msg: emailLog\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1936,
+        -880
+      ],
+      "id": "fa8aa799-a5f6-48e7-8c5c-cf8ef283aefd",
+      "name": "Code: Simular Correo"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"channel\": $node['Code: Simular BMC'].json.resultado_accion.channel,\n    \"text\": \"🚨 Falla Enlace - \" + $node['Code: Simular BMC'].json.resultado_accion.store_name,\n    \"attachments\": [\n      {\n        \"color\": \"#F57327\",\n        \"blocks\": [\n          { \"type\": \"header\", \"text\": { \"type\": \"plain_text\", \"text\": \":large_orange_circle: Falla Enlace - \" + $node['Code: Simular BMC'].json.resultado_accion.store_name + \" - \" + ($node['Code: Simular BMC'].json.resultado_accion.store_code || \"S/C\"), \"emoji\": true } },\n          { \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \"- Helix: *\" + $node['Code: Simular BMC'].json.ticket_bmc + \"*\\n- Impacto: *\" + $node['Code: Simular BMC'].json.resultado_accion.impact + \"*\\n- País: *\" + $node['Code: Simular BMC'].json.resultado_accion.pais + \"*\\n- WAN1: *\" + ($node['Code: Simular BMC'].json.resultado_accion.prov1_name || \"N/A\") + \"* \" + ($node['Code: Simular BMC'].json.resultado_accion.w1_down ? \":x:\" : \":heavy_check_mark:\") + \"\\n- WAN2: *\" + ($node['Code: Simular BMC'].json.resultado_accion.prov2_name || \"N/A\") + \"* \" + ($node['Code: Simular BMC'].json.resultado_accion.w2_down ? \":x:\" : \":heavy_check_mark:\") + \"\\n\\n- Descripción: La tienda presenta una falla \" + $node['Code: Simular BMC'].json.resultado_accion.impact.toLowerCase() + \", se encuentra operando por el enlace de respaldo (si aplica).\" } },\n          { \"type\": \"actions\", \"elements\": [ { \"type\": \"button\", \"text\": { \"type\": \"plain_text\", \"text\": \"Dashboard Meraki\", \"emoji\": true }, \"url\": $node['Code: Simular BMC'].json.resultado_accion.meraki_url || \"https://meraki.cisco.com\", \"action_id\": \"link_meraki\" } ] },\n          { \"type\": \"context\", \"elements\": [ { \"type\": \"plain_text\", \"text\": \"ID: \" + $node['Code: Simular BMC'].json.resultado_accion.fail_ids[0] + \"\\nInicio: \" + $now.toFormat('dd/MM/yyyy HH:mm:ss'), \"emoji\": true } ] }\n        ]\n      }\n    ]\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2368,
+        -880
+      ],
+      "id": "a3660942-b082-415a-ba65-e62197189b00",
+      "name": "Slack: Alerta Inicial",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wXVhrJbOPKc34rz4",
+          "name": "Slack: Nexus"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1344,
+        -656
+      ],
+      "id": "866b93c8-d394-486d-9676-faf13c17c046",
+      "name": "Loop: Recuperaciones"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Usamos 'item' (singular)\nconst data = item.json.resultado_accion;\n\n// Función helper para formatear hora Caracas usando JS Nativo (Sin Luxon)\nconst formatTime = (isoString) => {\n    if(!isoString) return \"N/A\";\n    const date = new Date(isoString);\n    \n    // Formateador nativo para Venezuela\n    return new Intl.DateTimeFormat('es-VE', {\n        timeZone: 'America/Caracas',\n        year: 'numeric',\n        month: '2-digit',\n        day: '2-digit',\n        hour: '2-digit',\n        minute: '2-digit',\n        second: '2-digit',\n        hour12: false\n    }).format(date);\n};\n\n// Array de bloques para Slack\nconst blocks = [];\n\n// 1. HEADER\nblocks.push({\n    \"type\": \"header\",\n    \"text\": {\n        \"type\": \"plain_text\",\n        \"text\": \":large_yellow_circle: Tienda en observación\",\n        \"emoji\": true\n    }\n});\n\n// 2. DETALLE WAN 1 (Solo si el SQL devolvió fecha de recuperación)\nif (data.w1_recov_time) {\n    const prov1 = data.prov1_name || \"Proveedor 1\";\n    const dur1 = data.w1_dur || 0;\n    const time1 = formatTime(data.w1_recov_time);\n    \n    blocks.push({\n        \"type\": \"section\",\n        \"text\": {\n            \"type\": \"mrkdwn\",\n            \"text\": `:small_orange_diamond: *WAN1 (${prov1}):*\\n- Fecha recuperación: ${time1}\\n- Duración: ${dur1} min`\n        }\n    });\n}\n\n// 3. DETALLE WAN 2 (Solo si el SQL devolvió fecha de recuperación)\nif (data.w2_recov_time) {\n    const prov2 = data.prov2_name || \"Proveedor 2\";\n    const dur2 = data.w2_dur || 0;\n    const time2 = formatTime(data.w2_recov_time);\n    \n    blocks.push({\n        \"type\": \"section\",\n        \"text\": {\n            \"type\": \"mrkdwn\",\n            \"text\": `:small_orange_diamond: *WAN2 (${prov2}):*\\n- Fecha recuperación: ${time2}\\n- Duración: ${dur2} min`\n        }\n    });\n}\n\n// 4. MENSAJE FINAL\nblocks.push({\n    \"type\": \"section\",\n    \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"- La tienda ha recuperado conectividad. Se mantendrá en un lapso corto de observación para monitorear la estabilidad de la misma.\"\n    }\n});\n\n// Generar mensaje de log para la BD\nconst log_msg = `Servicio restaurado. El caso pasa a estado \"En observación\" (60 min).`;\n\nreturn {\n  json: {\n    ...item.json,\n    // --- CAMBIO IMPORTANTE AQUÍ ---\n    // Enviamos el objeto puro. n8n se encargará de formatearlo correctamente dentro del nodo Slack.\n    slack_blocks: blocks, \n    log_msg: log_msg\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1728,
+        -640
+      ],
+      "id": "3ed7d27e-c0f5-4019-8f0a-b9772687fa6c",
+      "name": "Code: Preparar Datos Recuperación"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE public.network_failures_jj\nSET \n    msg_recovery_sent_at = NOW(), -- Marcamos el Checkpoint\n    analyst_notes = analyst_notes || jsonb_build_array(\n      jsonb_build_object(\n          'log', \n          to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : ' || $2 || ' - Nexus'\n      )\n  )\nWHERE id = ANY($1::bigint[]);",
+        "options": {
+          "queryReplacement": "={{ \n  [ \n    \"{\" + ($node['Code: Preparar Datos Recuperación'].json.resultado_accion.fail_ids || []).join(\",\") + \"}\", \n    $node['Code: Preparar Datos Recuperación'].json.log_msg \n  ] \n}}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2144,
+        -640
+      ],
+      "id": "23b5d950-9941-4b12-a0b0-437ea21a3443",
+      "name": "Supabase: Log Recuperación",
+      "credentials": {
+        "postgres": {
+          "id": "zv3CvTQjUWmJmOVa",
+          "name": "SOMMER NETWORK NEXUS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1344,
+        -416
+      ],
+      "id": "b65b74ae-d0f7-430d-a043-f1333e30c8cf",
+      "name": "Loop: Recaídas"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const data = item.json.resultado_accion; // Singular\n\nlet culpable = \"Desconocido\";\nif (data.w1_down) culpable = \"WAN1 (\" + (data.prov1_name || \"N/A\") + \")\";\nif (data.w2_down) culpable = \"WAN2 (\" + (data.prov2_name || \"N/A\") + \")\";\nif (data.w1_down && data.w2_down) culpable = \"AMBOS ENLACES\";\n\nconst log_msg = `Recaída detectada en ${culpable} durante observación. Retorna a gestión.`;\n\n// Slack Visuals\nconst slack_title = \"⚠️ Recaída Detectada - Servicio Inestable\";\nconst slack_detail = `El enlace ha vuelto a caer durante el periodo de observación.\\n*Origen:* ${culpable}\\n*Acción:* Se reinicia el protocolo de gestión.`;\n\nreturn {\n  json: {\n    ...item.json,\n    texto_culpable: culpable,\n    log_msg,\n    slack_title,\n    slack_detail\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1728,
+        -400
+      ],
+      "id": "2705c107-fb49-497e-a0e6-3ee235ab6c00",
+      "name": "Code: Preparar Datos Recaída"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"channel\": $node['Code: Preparar Datos Recaída'].json.resultado_accion.channel,\n    \"thread_ts\": $node['Code: Preparar Datos Recaída'].json.resultado_accion.slack_ts,\n    \"text\": \"⚠️ Recaída - \" + $node['Code: Preparar Datos Recaída'].json.resultado_accion.store_name,\n    \"attachments\": [\n      {\n        \"color\": \"#FF5722\", \n        \"blocks\": [\n          {\n            \"type\": \"header\",\n            \"text\": {\n              \"type\": \"plain_text\",\n              \"text\": $node['Code: Preparar Datos Recaída'].json.slack_title,\n              \"emoji\": true\n            }\n          },\n          {\n            \"type\": \"section\",\n            \"text\": {\n              \"type\": \"mrkdwn\",\n              \"text\": $node['Code: Preparar Datos Recaída'].json.slack_detail\n            }\n          },\n          {\n             \"type\": \"context\",\n             \"elements\": [\n               {\n                 \"type\": \"plain_text\",\n                 \"text\": \"Detección: \" + $now.toFormat('dd/MM/yyyy HH:mm:ss'),\n                 \"emoji\": true\n               }\n             ]\n          }\n        ]\n      }\n    ]\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1936,
+        -400
+      ],
+      "id": "a04aeba3-3dc5-43ab-a093-32cf5907ed60",
+      "name": "Slack: Aviso Recaída",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wXVhrJbOPKc34rz4",
+          "name": "Slack: Nexus"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE public.network_failures_jj\nSET analyst_notes = analyst_notes || jsonb_build_array(\n      jsonb_build_object(\n          'log', \n          to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : ' || $2 || ' - Nexus'\n      )\n  )\nWHERE id = ANY($1::bigint[]);",
+        "options": {
+          "queryReplacement": "={{ \n  [ \n    \"{\" + $node['Code: Preparar Datos Recaída'].json.resultado_accion.fail_ids.join(\",\") + \"}\", \n    $node['Code: Preparar Datos Recaída'].json.log_msg\n  ] \n}}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2144,
+        -400
+      ],
+      "id": "461eab0d-c85e-424a-abbb-e8a0b03b159b",
+      "name": "Supabase: Log Recaída",
+      "credentials": {
+        "postgres": {
+          "id": "zv3CvTQjUWmJmOVa",
+          "name": "SOMMER NETWORK NEXUS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"channel\": $node['Code: Datos Cierre'].json.resultado_accion.channel,\n    \"thread_ts\": $node['Code: Datos Cierre'].json.resultado_accion.slack_ts,\n    \"text\": \"🔒 Estabilidad Confirmada - \" + $node['Code: Datos Cierre'].json.resultado_accion.store_name,\n    \"attachments\": [\n      {\n        \"color\": \"#2196F3\", \n        \"blocks\": [\n          {\n            \"type\": \"header\",\n            \"text\": {\n              \"type\": \"plain_text\",\n              \"text\": \":large_blue_circle: Estabilidad Confirmada (60 min)\",\n              \"emoji\": true\n            }\n          },\n          {\n            \"type\": \"section\",\n            \"text\": {\n              \"type\": \"mrkdwn\",\n              \"text\": \"El servicio se ha mantenido estable durante el periodo de observación.\\n\\n*Estado Actual:* `Pendiente por Cierre`\\n*Acción Requerida:* El analista debe ingresar al Dashboard para clasificar la causa y cerrar el ticket administrativamente.\"\n            }\n          },\n          {\n             \"type\": \"context\",\n             \"elements\": [\n               {\n                 \"type\": \"plain_text\",\n                 \"text\": \"Monitoreo automático finalizado | Hora: \" + $now.toFormat('dd/MM/yyyy HH:mm:ss'),\n                 \"emoji\": true\n               }\n             ]\n          }\n        ]\n      }\n    ]\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1936,
+        -144
+      ],
+      "id": "3181ce40-7465-4a87-b0a3-c7aac1cc3c0f",
+      "name": "Slack: Aviso Cierre",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wXVhrJbOPKc34rz4",
+          "name": "Slack: Nexus"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE public.network_failures_jj\nSET \n    msg_close_sent_at = NOW(), -- 🛡️ BLINDAJE: Apaga el bucle de notificaciones\n    analyst_notes = analyst_notes || jsonb_build_array(\n      jsonb_build_object(\n          'log', \n          to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : Notificación de estabilidad enviada. Caso disponible para cierre administrativo. - Nexus'\n      )\n  )\nWHERE id = ANY($1::bigint[]);",
+        "options": {
+          "queryReplacement": "={{ \n  [ \n    \"{\" + ($node['Code: Datos Cierre'].json.resultado_accion.fail_ids || []).join(\",\") + \"}\" \n  ] \n}}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2144,
+        -144
+      ],
+      "id": "3c21eaaf-1d46-4688-8d2c-67c7e70dde55",
+      "name": "Supabase: Log Cierre",
+      "credentials": {
+        "postgres": {
+          "id": "zv3CvTQjUWmJmOVa",
+          "name": "SOMMER NETWORK NEXUS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1344,
+        96
+      ],
+      "id": "19d3261a-c6ab-494d-b8ad-5f08f8a2f263",
+      "name": "Loop: Flapping Start"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"channel\": $node['Code: Datos Flapping'].json.resultado_accion.channel,\n    \"thread_ts\": $node['Code: Datos Flapping'].json.resultado_accion.slack_ts,\n    \"text\": \"⛔ Intermitencia Crítica - \" + $node['Code: Datos Flapping'].json.resultado_accion.store_name,\n    \"attachments\": [\n      {\n        \"color\": \"#424242\", // Gris Oscuro\n        \"blocks\": [\n          {\n            \"type\": \"header\",\n            \"text\": {\n              \"type\": \"plain_text\",\n              \"text\": \"⛔ Intermitencia Detectada (Flapping)\",\n              \"emoji\": true\n            }\n          },\n          {\n            \"type\": \"section\",\n            \"text\": {\n              \"type\": \"mrkdwn\",\n              \"text\": \"Se han registrado 3 o más recaídas consecutivas en corto tiempo.\\n\\n*Acción del Sistema:* Se pausan las notificaciones automáticas para este incidente hasta confirmar una estabilidad de 60 minutos.\"\n            }\n          },\n          {\n             \"type\": \"context\",\n             \"elements\": [\n               {\n                 \"type\": \"plain_text\",\n                 \"text\": \"Estado: Intermitencia | Hora: \" + $now.toFormat('HH:mm:ss'),\n                 \"emoji\": true\n               }\n             ]\n          }\n        ]\n      }\n    ]\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1936,
+        112
+      ],
+      "id": "59d9c3b9-ad51-4478-b9e9-e96da72601f7",
+      "name": "Slack: Aviso Intermitencia",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wXVhrJbOPKc34rz4",
+          "name": "Slack: Nexus"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE public.network_failures_jj\nSET analyst_notes = analyst_notes || jsonb_build_array(\n      jsonb_build_object(\n          'log', \n          to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : ' || $2 || ' - Nexus'\n      )\n  )\nWHERE id = ANY($1::bigint[]);",
+        "options": {
+          "queryReplacement": "={{ [ \"{\" + $node['Code: Datos Flapping'].json.resultado_accion.fail_ids.join(\",\") + \"}\", $node['Code: Datos Flapping'].json.log_msg ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2144,
+        112
+      ],
+      "id": "31cf101a-5c0e-4bba-933b-0a00f6c52987",
+      "name": "Supabase: Log Flapping",
+      "credentials": {
+        "postgres": {
+          "id": "zv3CvTQjUWmJmOVa",
+          "name": "SOMMER NETWORK NEXUS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1344,
+        384
+      ],
+      "id": "43e92c9e-8c2d-4d91-9c17-d02dc49cc62d",
+      "name": "Loop: Flapping End"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"channel\": $node['Code: Datos Flapping End'].json.resultado_accion.channel,\n    \"thread_ts\": $node['Code: Datos Flapping End'].json.resultado_accion.slack_ts,\n    \"text\": \"✅ Estabilidad Recuperada - \" + $node['Code: Datos Flapping End'].json.resultado_accion.store_name,\n    \"attachments\": [\n      {\n        \"color\": \"#2E7D32\", // Verde Bosque\n        \"blocks\": [\n          {\n            \"type\": \"header\",\n            \"text\": {\n              \"type\": \"plain_text\",\n              \"text\": \"✅ Estabilidad Recuperada (Post-Intermitencia)\",\n              \"emoji\": true\n            }\n          },\n          {\n            \"type\": \"section\",\n            \"text\": {\n              \"type\": \"mrkdwn\",\n              \"text\": \"El enlace ha superado la etapa de inestabilidad y se ha mantenido conectado por 60 minutos.\\n\\n*Estado Actual:* `Pendiente por Cierre`\"\n            }\n          }\n        ]\n      }\n    ]\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1952,
+        400
+      ],
+      "id": "8ff3f0e1-58d7-49f4-b592-d8e5829380a9",
+      "name": "Slack: Recuperación Intermitencia",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wXVhrJbOPKc34rz4",
+          "name": "Slack: Nexus"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE public.network_failures_jj\nSET \n    msg_close_sent_at = NOW(), -- 🛡️ BLINDAJE: Apaga el bucle de notificaciones post-intermitencia\n    analyst_notes = analyst_notes || jsonb_build_array(\n      jsonb_build_object(\n          'log', \n          to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : ' || $2 || ' - Nexus'\n      )\n  )\nWHERE id = ANY($1::bigint[]);",
+        "options": {
+          "queryReplacement": "={{ [ \"{\" + $('Code: Datos Flapping End').item.json.resultado_accion.fail_ids.join(\",\") + \"}\", \"Estabilidad recuperada tras intermitencia. Notificación de cierre enviada. Caso disponible para cierre administrativo.\" ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2160,
+        400
+      ],
+      "id": "b980d46e-e4da-409b-8ffe-42e91f9b3e50",
+      "name": "Supabase: Log Fin Flapping",
+      "credentials": {
+        "postgres": {
+          "id": "zv3CvTQjUWmJmOVa",
+          "name": "SOMMER NETWORK NEXUS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1344,
+        640
+      ],
+      "id": "801796ef-9dc2-4bb4-8306-3da5b4147856",
+      "name": "Loop: Escalada"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"channel\": $node['Code: Datos Escalada'].json.resultado_accion.channel,\n    \"thread_ts\": $node['Code: Datos Escalada'].json.resultado_accion.slack_ts,\n    \"text\": \"📉 ESCALADA DE INCIDENTE - \" + $node['Code: Datos Escalada'].json.resultado_accion.store_name,\n    \"attachments\": [\n      {\n        \"color\": \"#D50000\", // Rojo Intenso\n        \"blocks\": [\n          {\n            \"type\": \"header\",\n            \"text\": {\n              \"type\": \"plain_text\",\n              \"text\": \"📉 Escalada: Afectación TOTAL\",\n              \"emoji\": true\n            }\n          },\n          {\n            \"type\": \"section\",\n            \"text\": {\n              \"type\": \"mrkdwn\",\n              \"text\": \"El incidente ha evolucionado. Ha caído el enlace de respaldo.\\n*Impacto:* La tienda se encuentra incomunicada (TOTAL).\"\n            }\n          }\n        ]\n      }\n    ]\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1952,
+        656
+      ],
+      "id": "5e1d32a6-4e44-4646-b030-42dc610a03e4",
+      "name": "Slack: Aviso Escalada",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wXVhrJbOPKc34rz4",
+          "name": "Slack: Nexus"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE public.network_failures_jj\nSET site_impact = 'TOTAL',\n    analyst_notes = analyst_notes || jsonb_build_array(\n        jsonb_build_object(\n            'log', \n            to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : ' || $2 || ' - Nexus'\n        )\n    )\nWHERE id = ANY($1::bigint[]);",
+        "options": {
+          "queryReplacement": "={{ [ \"{\" + $node['Code: Datos Escalada'].json.resultado_accion.fail_ids.join(\",\") + \"}\", $node['Code: Datos Escalada'].json.log_msg ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2160,
+        656
+      ],
+      "id": "cedf3b82-cbfd-4fe5-9990-ae0364903e8f",
+      "name": "Supabase: Log Escalada",
+      "credentials": {
+        "postgres": {
+          "id": "zv3CvTQjUWmJmOVa",
+          "name": "SOMMER NETWORK NEXUS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"channel\": $node['Code: Preparar Datos Recuperación'].json.resultado_accion.channel,\n    \"thread_ts\": $node['Code: Preparar Datos Recuperación'].json.resultado_accion.slack_ts,\n    \"text\": \"✅ Tienda en observación - \" + $node['Code: Preparar Datos Recuperación'].json.resultado_accion.store_name,\n    \"attachments\": [\n      {\n        \"color\": \"#FFEE4D\",\n        \"blocks\": $node['Code: Preparar Datos Recuperación'].json.slack_blocks\n      }\n    ]\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1936,
+        -640
+      ],
+      "id": "268a6201-6ee4-409e-afbc-05343fef4d66",
+      "name": "Slack: Aviso Observación",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wXVhrJbOPKc34rz4",
+          "name": "Slack: Nexus"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// 1. LEER DATOS\nconst data = item.json.resultado_accion;\n\n// Mensaje para el Log de BD\nconst log_msg = \"⛔ Intermitencia crítica detectada (3+ recaídas). El sistema pausa las notificaciones automáticas.\";\n\n// 2. RETORNO\nreturn {\n  json: {\n    ...item.json,\n    log_msg: log_msg\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1728,
+        112
+      ],
+      "id": "b14bc516-1b74-4950-bf35-7ec647ece3c2",
+      "name": "Code: Datos Flapping"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Mensaje para el Log de BD\nconst log_msg = \"✅ Estabilidad recuperada tras periodo de intermitencia. El caso pasa a 'Pendiente por Cierre'.\";\n\nreturn {\n  json: {\n    ...item.json,\n    log_msg: log_msg\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1744,
+        400
+      ],
+      "id": "af2ab573-4dc8-4c0b-8ebe-956c702753d6",
+      "name": "Code: Datos Flapping End"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const log_msg = \"📉 Escalada de incidente detectada. Impacto cambió a TOTAL.\";\nreturn { json: { ...item.json, log_msg } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1744,
+        656
+      ],
+      "id": "e7efd76f-5326-46b9-a073-05e2c4b889d8",
+      "name": "Code: Datos Escalada"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Usamos 'item' (singular)\n// En esta rama no hay mucha lógica compleja, solo pasar el mensaje\nconst log_msg = \"Estabilidad de 60 min confirmada. El caso pasa a 'Pendiente por Cierre'.\";\n\nreturn {\n  json: {\n    ...item.json, // Mantenemos los datos originales\n    log_msg: log_msg\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1728,
+        -144
+      ],
+      "id": "07a72a6a-b9ba-48b3-a253-ba446244b48d",
+      "name": "Code: Datos Cierre"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE public.network_failures_jj SET slack_thread_ts = $1 WHERE id = ANY($2::bigint[]);",
+        "options": {
+          "queryReplacement": "={{ [ $json.ts, \"{\" + $node['Code: Simular BMC'].json.resultado_accion.fail_ids.join(\",\") + \"}\" ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2576,
+        -880
+      ],
+      "id": "cb397865-3c7a-4a52-971e-9441b61c8f24",
+      "name": "Supabase: Guardar TS",
+      "credentials": {
+        "postgres": {
+          "id": "zv3CvTQjUWmJmOVa",
+          "name": "SOMMER NETWORK NEXUS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE public.network_failures_jj\nSET \n  wan1_ticket_ref = CASE WHEN $4 = 'true' THEN $1 ELSE wan1_ticket_ref END,\n  wan2_ticket_ref = CASE WHEN $5 = 'true' THEN $1 ELSE wan2_ticket_ref END,\n  analyst_notes = analyst_notes || jsonb_build_array(\n      jsonb_build_object(\n          'log', \n          -- FORMATO EXACTO: \"DD/MM/YYYY HH:mm:ss : Mensaje - Nexus\"\n          to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : ' || $3 || ' - Nexus'\n      )\n  )\nWHERE id = ANY($2::bigint[]);",
+        "options": {
+          "queryReplacement": "={{ [ \n  $json.ticket_bmc, \n  \"{\" + $json.resultado_accion.fail_ids.join(\",\") + \"}\", \n  $json.log_desc, \n  $json.resultado_accion.w1_down.toString(), \n  $json.resultado_accion.w2_down.toString() \n] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2160,
+        -880
+      ],
+      "id": "e15b9950-d9f2-4441-a897-fb178eed4244",
+      "name": "Supabase: Guardar Ticket",
+      "credentials": {
+        "postgres": {
+          "id": "zv3CvTQjUWmJmOVa",
+          "name": "SOMMER NETWORK NEXUS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1344,
+        -160
+      ],
+      "id": "1eb93b70-61e4-4a44-aae5-547ecf5aeced",
+      "name": "Loop: Cierre"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://script.google.com/macros/s/AKfycbwxFWmjmeGp-4wYdqQnYclU2s96khvsMQHG2ms6O7KnvTPyaGIYsCpvNyzU6X-ZvttRRA/exec",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"store_name\": $node[\"Code: Simular Correo\"].json.resultado_accion.store_name || \"Sin Nombre\",\n    \"store_code\": $node[\"Code: Simular Correo\"].json.resultado_accion.store_code || \"S/C\",\n    \"store_address\": $node[\"Code: Simular Correo\"].json.resultado_accion.store_address || \"Sin dirección registrada\",\n    \n    \"w1_down\": $node[\"Code: Simular Correo\"].json.resultado_accion.w1_down || false,\n    \"w2_down\": $node[\"Code: Simular Correo\"].json.resultado_accion.w2_down || false,\n    \n    \"prov1_name\": $node[\"Code: Simular Correo\"].json.resultado_accion.prov1_name || \"N/A\",\n    \"wan1_circuit_id\": $node[\"Code: Simular Correo\"].json.resultado_accion.wan1_circuit_id || \"N/A\",\n    \"wan1_ip_pub\": $node[\"Code: Simular Correo\"].json.resultado_accion.wan1_ip_pub || \"N/A\",\n    \"wan1_gateway\": $node[\"Code: Simular Correo\"].json.resultado_accion.wan1_gateway || \"N/A\",\n    \"wan1_support_email\": $node[\"Code: Simular Correo\"].json.resultado_accion.wan1_support_email || \"N/A\",\n    \n    \"prov2_name\": $node[\"Code: Simular Correo\"].json.resultado_accion.prov2_name || \"N/A\",\n    \"wan2_circuit_id\": $node[\"Code: Simular Correo\"].json.resultado_accion.wan2_circuit_id || \"N/A\",\n    \"wan2_ip_pub\": $node[\"Code: Simular Correo\"].json.resultado_accion.wan2_ip_pub || \"N/A\",\n    \"wan2_gateway\": $node[\"Code: Simular Correo\"].json.resultado_accion.wan2_gateway || \"N/A\",\n    \"wan2_support_email\": $node[\"Code: Simular Correo\"].json.resultado_accion.wan2_support_email || \"N/A\"\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2784,
+        -880
+      ],
+      "id": "dab723fb-053c-41d4-8f7f-1547b38efc49",
+      "name": "Correo : Reportar WAN"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE public.network_failures_jj\nSET \n  email_status_w1 = CASE WHEN $2::text IS NOT NULL THEN $2::text ELSE email_status_w1 END,\n  email_ts_w1 = CASE WHEN $3::text IS NOT NULL THEN $3::text ELSE email_ts_w1 END,\n  email_status_w2 = CASE WHEN $4::text IS NOT NULL THEN $4::text ELSE email_status_w2 END,\n  email_ts_w2 = CASE WHEN $5::text IS NOT NULL THEN $5::text ELSE email_ts_w2 END\nWHERE id = ANY($1::bigint[]);",
+        "options": {
+          "queryReplacement": "={{ [\n  \"{\" + $node[\"Code: Simular Correo\"].json.resultado_accion.fail_ids.join(\",\") + \"}\",\n  $json.w1_status || null,\n  $json.w1_thread || null,\n  $json.w2_status || null,\n  $json.w2_thread || null\n] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3008,
+        -880
+      ],
+      "id": "9f5e537a-9fd8-4c2c-9a23-6946bd051d7f",
+      "name": "Supabase: Guardar Email TS",
+      "credentials": {
+        "postgres": {
+          "id": "zv3CvTQjUWmJmOVa",
+          "name": "SOMMER NETWORK NEXUS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.resultado_accion.action }}",
+                    "rightValue": "TRIGGER_PROTOCOL",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "124f4a56-7847-440f-8a52-8d8179f5bd75"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.resultado_accion.action }}",
+                    "rightValue": "SEND_RECOVERY",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "af0f2bc7-bf7a-47ea-9117-3c37db05b51d"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.resultado_accion.action }}",
+                    "rightValue": "SEND_RELAPSE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "d320ec6f-7338-4c98-836b-e55d29e18438"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.resultado_accion.action }}",
+                    "rightValue": "SEND_CLOSE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "e9284c50-757b-4f4c-abe7-47fc58215c26"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.resultado_accion.action }}",
+                    "rightValue": "SEND_FLAPPING",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "a63c248f-caae-498c-bc61-4bb33cfe6dfd"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.resultado_accion.action }}",
+                    "rightValue": "SEND_FLAPPING_RECOVERY",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "be7da9d4-a3ef-44ab-b112-bbdaf03d532a"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.resultado_accion.action }}",
+                    "rightValue": "SEND_ESCALATION",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "16f1ba3b-0dd3-48a7-85b3-33d9295b7b19"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.resultado_accion.action }}",
+                    "rightValue": "TRIGGER_MASSIVE_PROTOCOL",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "da48f05f-415a-4fa3-ba78-cfd8ccfb9758"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.resultado_accion.action }}",
+                    "rightValue": "TRIGGER_MASSIVE_UPDATE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "35968ae3-68d5-40ed-8b07-029c6c999700"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.resultado_accion.action }}",
+                    "rightValue": "TRIGGER_MASSIVE_OBSERVATION",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "6ec8c0e5-6f1a-4fc7-88b2-9dac464b22c3"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.resultado_accion.action }}",
+                    "rightValue": "TRIGGER_MASSIVE_PENDING_CLOSE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "0a4851a8-33e8-4893-9167-27a14be80ff8"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        992,
+        -32
+      ],
+      "id": "8f537734-cd9c-4a2d-95c5-9e7e6837139a",
+      "name": "Switch: Distribuidor de Acciones"
+    },
+    {
+      "parameters": {
+        "jsCode": "const observ = new Map();\nitems.forEach(item => {\n  const data = item.json.resultado_accion;\n  if (!observ.has(data.slack_ts)) { observ.set(data.slack_ts, data); }\n});\nreturn Array.from(observ.values()).map(data => ({ json: data }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        1296
+      ],
+      "id": "7178b223-9bbd-4b24-a7c5-87e5993a2c7c",
+      "name": "Code: Deduplicar Observación"
+    },
+    {
+      "parameters": {
+        "jsCode": "const cierres = new Map();\nitems.forEach(item => {\n  const data = item.json.resultado_accion;\n  if (!cierres.has(data.slack_ts)) { cierres.set(data.slack_ts, data); }\n});\nreturn Array.from(cierres.values()).map(data => ({ json: data }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        1504
+      ],
+      "id": "a1c6398d-f9ff-4fe8-9d98-7c52fdb8ffd3",
+      "name": "Code: Deduplicar Cierre Masiva"
+    },
+    {
+      "parameters": {
+        "jsCode": "const grupos = {};\nitems.forEach(item => {\n  const data = item.json.resultado_accion;\n  const id = data.massive_id;\n  if (!id) return;\n  if (!grupos[id]) {\n    grupos[id] = { massive_id: id, proveedor: data.proveedor, pais: data.pais, channel: data.channel, email_soporte: data.email_soporte, email_bmc: data.email_bmc, tiendas_data: data.tiendas_data, porcentaje: data.porcentaje, tiendas: [] };\n  }\n  if(data.tiendas_data && Array.isArray(data.tiendas_data)) {\n      grupos[id].tiendas_data = data.tiendas_data;\n      grupos[id].tiendas = data.tiendas_data.map(t => t.tienda);\n  }\n});\nfunction crearTabla(lista) {\n  let t = \"TIENDA AFECTADA\\n\"; t += \"-----------------------------------\\n\";\n  lista.slice(0, 40).forEach(tienda => { t += `${tienda.substring(0, 30).padEnd(30)}\\n`; });\n  if (lista.length > 40) t += `... y ${lista.length - 40} tiendas más.`; return t;\n}\nreturn Object.values(grupos).map(grupo => ({ json: { ...grupo, total_afectados: grupo.tiendas.length, tabla_texto: crearTabla(grupo.tiendas) } }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        896
+      ],
+      "id": "96508f7c-5597-4e58-85d0-20c843faf6a7",
+      "name": "Code: Agrupar Masiva"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1536,
+        896
+      ],
+      "id": "1edb5fc6-b662-40ba-ac45-cac72819199e",
+      "name": "Loop: Alerta Masiva"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const ticket = 'INC-' + Math.floor(Math.random() * 900000 + 100000);\nreturn { json: { ...item.json, ticket_bmc: ticket } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1728,
+        912
+      ],
+      "id": "79238b6e-db33-430b-881e-1bf494190cb8",
+      "name": "Code: Simular BMC Masiva"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n{\n  \"channel\": $json.channel,\n  \"text\": \"🚨 ALERTA DE CRISIS MASIVA - \" + $json.proveedor,\n  \"attachments\": [{\n    \"color\": \"#B71C1C\",\n    \"blocks\": [\n      { \"type\": \"header\", \"text\": { \"type\": \"plain_text\", \"text\": \"🚨 FALLA MASIVA CONFIRMADA\", \"emoji\": true } },\n      { \"type\": \"section\", \"fields\": [ { \"type\": \"mrkdwn\", \"text\": \"*Proveedor:*\\n\" + $json.proveedor }, { \"type\": \"mrkdwn\", \"text\": \"*País:*\\n\" + $json.pais }, { \"type\": \"mrkdwn\", \"text\": \"*Afectación Inicial:*\\n\" + $json.total_afectados + \" Tiendas (\" + $json.porcentaje + \"%)\" }, { \"type\": \"mrkdwn\", \"text\": \"*Ticket BMC:*\\n*\" + $json.ticket_bmc + \"*\" } ] },\n      { \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \"*Detalle de Afectación:*\\n```\\n\" + $json.tabla_texto + \"\\n```\" } },\n      { \"type\": \"context\", \"elements\": [{ \"type\": \"plain_text\", \"text\": \"ID Masiva: \" + $json.massive_id + \" | Las alertas individuales han sido suprimidas.\", \"emoji\": true }] }\n    ]\n  }]\n}\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1936,
+        912
+      ],
+      "id": "b630da9f-8b66-41ff-adcc-470aed331f67",
+      "name": "Slack: Alerta Masiva",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wXVhrJbOPKc34rz4",
+          "name": "Slack: Nexus"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE public.massive_incidents_jj SET slack_thread_ts = $1 WHERE id = $2;",
+        "options": {
+          "queryReplacement": "={{ [ $json.ts, $('Code: Simular BMC Masiva').item.json.massive_id ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2160,
+        912
+      ],
+      "id": "362897bc-15a5-42b6-bc95-9863aa0af7c7",
+      "name": "Supabase: Guardar TS Masiva",
+      "credentials": {
+        "postgres": {
+          "id": "zv3CvTQjUWmJmOVa",
+          "name": "SOMMER NETWORK NEXUS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://script.google.com/macros/s/AKfycbwxFWmjmeGp-4wYdqQnYclU2s96khvsMQHG2ms6O7KnvTPyaGIYsCpvNyzU6X-ZvttRRA/exec",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"tipo_alerta\": \"MASIVA\",\n    \"massive_id\": $('Code: Simular BMC Masiva').item.json.massive_id,\n    \"ticket_bmc\": $('Code: Simular BMC Masiva').item.json.ticket_bmc,\n    \"proveedor\": $('Code: Simular BMC Masiva').item.json.proveedor,\n    \"pais\": $('Code: Simular BMC Masiva').item.json.pais,\n    \"email_soporte\": $('Code: Simular BMC Masiva').item.json.email_soporte,\n    \"email_bmc\": $('Code: Simular BMC Masiva').item.json.email_bmc,\n    \"total_afectadas\": $('Code: Simular BMC Masiva').item.json.total_afectados,\n    \"porcentaje\": String($('Code: Simular BMC Masiva').item.json.porcentaje),\n    \"tiendas_data\": $('Code: Simular BMC Masiva').item.json.tiendas_data\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2368,
+        912
+      ],
+      "id": "209eda92-35be-492e-be44-de97580d46b5",
+      "name": "Correo: Reportar Masiva"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE public.massive_incidents_jj SET email_status_isp = CASE WHEN $2::text IS NOT NULL THEN $2::text ELSE email_status_isp END, email_ts_isp = CASE WHEN $3::text IS NOT NULL THEN $3::text ELSE email_ts_isp END WHERE id = $1;",
+        "options": {
+          "queryReplacement": "={{ [\n  $('Code: Simular BMC Masiva').item.json.massive_id,\n  $json.status || null,\n  $json.massive_thread || null\n] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2608,
+        912
+      ],
+      "id": "35fd337f-3ba5-4ca7-a809-b69861524e33",
+      "name": "Supabase: Guardar Email TS Masiva",
+      "credentials": {
+        "postgres": {
+          "id": "zv3CvTQjUWmJmOVa",
+          "name": "SOMMER NETWORK NEXUS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const updates = new Map();\nitems.forEach(item => {\n  const data = item.json.resultado_accion;\n  if (!updates.has(data.slack_ts)) { updates.set(data.slack_ts, data); }\n});\nreturn Array.from(updates.values()).map(data => ({ json: data }));\n\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        1104
+      ],
+      "id": "b7df4d89-e7e3-4d64-bc5f-59fde153cf72",
+      "name": "Code: Deduplicar Progreso"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n{\n  \"channel\": $json.channel,\n  \"thread_ts\": $json.slack_ts,\n  \"text\": \"📉 Actualización de Progreso - \" + $json.recovery_pct + \"%\",\n  \"attachments\": [{\n    \"color\": \"#0288D1\",\n    \"blocks\": [\n      { \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \"📉 *Actualización de Servicio*\\n\\nEl proveedor *\" + $json.proveedor + \"* reporta una recuperación del *\" + $json.recovery_pct + \"%* en su red.\" } },\n      { \"type\": \"context\", \"elements\": [{ \"type\": \"mrkdwn\", \"text\": \"Tiendas remanentes fuera de línea: *\" + $json.tiendas_restantes + \"*\" }] }\n    ]\n  }]\n}\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1536,
+        1104
+      ],
+      "id": "79c50eae-deca-4aef-b461-1e1d39e01a72",
+      "name": "Slack: Aviso Progreso",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wXVhrJbOPKc34rz4",
+          "name": "Slack: Nexus"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n{\n  \"channel\": $json.channel,\n  \"thread_ts\": $json.slack_ts,\n  \"text\": \"🟢 Masiva en Observación\",\n  \"attachments\": [{\n    \"color\": \"#FFB300\",\n    \"blocks\": [\n      { \"type\": \"header\", \"text\": { \"type\": \"plain_text\", \"text\": \"🟢 Masiva en Observación\", \"emoji\": true } },\n      { \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \"La afectación global de *\" + $json.proveedor + \"* en *\" + $json.pais + \"* ha descendido por debajo del umbral crítico (< 5%).\\n\\nEl ticket general permanece *En Observación* debido a que aún hay *\" + $json.tiendas_restantes + \" tienda(s)* en estado fallido.\" } }\n    ]\n  }]\n}\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1536,
+        1296
+      ],
+      "id": "98556bf6-072d-4145-9da4-bfcea9363e8c",
+      "name": "Slack: Aviso Observación2",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wXVhrJbOPKc34rz4",
+          "name": "Slack: Nexus"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n{\n  \"channel\": $json.channel,\n  \"thread_ts\": $json.slack_ts,\n  \"text\": \"✅ Masiva Pendiente por Cierre\",\n  \"attachments\": [{\n    \"color\": \"#388E3C\",\n    \"blocks\": [\n      { \"type\": \"header\", \"text\": { \"type\": \"plain_text\", \"text\": \"✅ Masiva Pendiente por Cierre\", \"emoji\": true } },\n      { \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \"El 100% de las tiendas afectadas por la masiva de *\" + $json.proveedor + \"* en *\" + $json.pais + \"* han recuperado conectividad.\\n\\nEl incidente queda a la espera del *Cierre Administrativo* por parte del Analista de Turno.\" } }\n    ]\n  }]\n}\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1536,
+        1504
+      ],
+      "id": "ae953003-9973-4b8e-86ed-fc76775e2259",
+      "name": "Slack: Cierre Masiva",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wXVhrJbOPKc34rz4",
+          "name": "Slack: Nexus"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE public.massive_incidents_jj\nSET \n    msg_close_sent_at = NOW(),\n    logs = COALESCE(logs, '[]'::jsonb) || jsonb_build_array(\n      jsonb_build_object(\n          'log', \n          to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : Notificación de cierre masivo enviada a Slack. - Nexus'\n      )\n  )\nWHERE id = $1;",
+        "options": {
+          "queryReplacement": "={{ [ $('Code: Deduplicar Cierre Masiva').item.json.massive_id ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1808,
+        1504
+      ],
+      "id": "5b717de4-aeca-4dd6-822f-58d43edec0b8",
+      "name": "Supabase: Sellar Cierre Masivo",
+      "credentials": {
+        "postgres": {
+          "id": "zv3CvTQjUWmJmOVa",
+          "name": "SOMMER NETWORK NEXUS"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Cron: Cada Minuto": {
+      "main": [
+        [
+          {
+            "node": "Meraki: Obtener Estados Uplink",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meraki: Obtener Estados Uplink": {
+      "main": [
+        [
+          {
+            "node": "Code: Agrupar por Sitio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Agrupar por Sitio": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [
+          {
+            "node": "Switch: Distribuidor de Acciones",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase: Procesar Salud",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Procesar Salud": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop: Crisis": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Code: Simular BMC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Simular BMC": {
+      "main": [
+        [
+          {
+            "node": "Code: Simular Correo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Simular Correo": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Guardar Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Alerta Inicial": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Guardar TS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop: Recuperaciones": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Code: Preparar Datos Recuperación",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Preparar Datos Recuperación": {
+      "main": [
+        [
+          {
+            "node": "Slack: Aviso Observación",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Log Recuperación": {
+      "main": [
+        [
+          {
+            "node": "Loop: Recuperaciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop: Recaídas": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Code: Preparar Datos Recaída",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Preparar Datos Recaída": {
+      "main": [
+        [
+          {
+            "node": "Slack: Aviso Recaída",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Aviso Recaída": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Log Recaída",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Aviso Cierre": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Log Cierre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Log Cierre": {
+      "main": [
+        [
+          {
+            "node": "Loop: Cierre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop: Flapping Start": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Code: Datos Flapping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Aviso Intermitencia": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Log Flapping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop: Flapping End": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Code: Datos Flapping End",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Log Flapping": {
+      "main": [
+        [
+          {
+            "node": "Loop: Flapping Start",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Recuperación Intermitencia": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Log Fin Flapping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop: Escalada": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Code: Datos Escalada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Log Fin Flapping": {
+      "main": [
+        [
+          {
+            "node": "Loop: Flapping End",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Aviso Escalada": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Log Escalada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Log Escalada": {
+      "main": [
+        [
+          {
+            "node": "Loop: Escalada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Aviso Observación": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Log Recuperación",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Log Recaída": {
+      "main": [
+        [
+          {
+            "node": "Loop: Recaídas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Datos Flapping": {
+      "main": [
+        [
+          {
+            "node": "Slack: Aviso Intermitencia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Datos Flapping End": {
+      "main": [
+        [
+          {
+            "node": "Slack: Recuperación Intermitencia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Datos Escalada": {
+      "main": [
+        [
+          {
+            "node": "Slack: Aviso Escalada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Datos Cierre": {
+      "main": [
+        [
+          {
+            "node": "Slack: Aviso Cierre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Guardar TS": {
+      "main": [
+        [
+          {
+            "node": "Correo : Reportar WAN",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Guardar Ticket": {
+      "main": [
+        [
+          {
+            "node": "Slack: Alerta Inicial",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop: Cierre": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Code: Datos Cierre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Correo : Reportar WAN": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Guardar Email TS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Guardar Email TS": {
+      "main": [
+        [
+          {
+            "node": "Loop: Crisis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch: Distribuidor de Acciones": {
+      "main": [
+        [
+          {
+            "node": "Loop: Crisis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop: Recuperaciones",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop: Recaídas",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop: Cierre",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop: Flapping Start",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop: Flapping End",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop: Escalada",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Agrupar Masiva",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Deduplicar Progreso",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Deduplicar Observación",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Deduplicar Cierre Masiva",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Deduplicar Observación": {
+      "main": [
+        [
+          {
+            "node": "Slack: Aviso Observación2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Deduplicar Cierre Masiva": {
+      "main": [
+        [
+          {
+            "node": "Slack: Cierre Masiva",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Agrupar Masiva": {
+      "main": [
+        [
+          {
+            "node": "Loop: Alerta Masiva",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop: Alerta Masiva": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Code: Simular BMC Masiva",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Simular BMC Masiva": {
+      "main": [
+        [
+          {
+            "node": "Slack: Alerta Masiva",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Alerta Masiva": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Guardar TS Masiva",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Guardar TS Masiva": {
+      "main": [
+        [
+          {
+            "node": "Correo: Reportar Masiva",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Correo: Reportar Masiva": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Guardar Email TS Masiva",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Guardar Email TS Masiva": {
+      "main": [
+        [
+          {
+            "node": "Loop: Alerta Masiva",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Deduplicar Progreso": {
+      "main": [
+        [
+          {
+            "node": "Slack: Aviso Progreso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Cierre Masiva": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Sellar Cierre Masivo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "8ba7e04e-069a-4dbd-96d5-77c1f738f62e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "711d50e124213b735042c98c8c11f15f25c693a7f4a2c9947e94bc2c86a3c4d9"
+  },
+  "id": "TFU2PeglAi1f2XRIhr6de",
+  "tags": [
+    {
+      "updatedAt": "2026-02-19T12:26:26.778Z",
+      "createdAt": "2025-11-04T12:35:34.440Z",
+      "id": "acrrGzSUMhn7yc7g",
+      "name": "SOMMER NETWORK NEXUS"
+    }
+  ]
+}

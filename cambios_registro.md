@@ -375,4 +375,47 @@ const editableKeys: (keyof DeviceInventory)[] = [
 ];
 // + UI Actualizada con nuevos inputs y Dropdowns filtrados dinámicamente según 'pais'.
 ```
+### Visualización de Impacto Geográfico en Fallas Masivas
+**Fecha y Hora:** 24/02/2026, 23:55
+**Archivo modificado / Tabla:** `types.ts`, `src/components/Massive.tsx`, `src/components/MassiveIncidentCard.tsx` y creación de `src/components/IncidentMapModal.tsx`
+**Ubicación (Líneas/Función):** Función `Massive` (Fetch Query), Render `MassiveIncidentCard`
+**Dependencias Agregadas:** `leaflet`, `react-leaflet`, `@types/leaflet`
+**Motivo del cambio:** Integrar un mapa interactivo para visualizar las coordenadas de las tiendas afectadas por un incidente masivo (Opción 1: Acceso rápido desde el frente de la tarjeta).
+
+#### ESTADO ANTERIOR (Antes del Cambio)
+```typescript
+// types.ts (Fragmento)
+export interface NetworkFailure {
+  codigo_tienda?: string;
+  cruce_tienda?: string;
+  meraki_url?: string;
+...
+}
+
+// Massive.tsx (Fragmento Query)
+const { data: invData } = await supabase
+    .from('devices_inventory_jj')
+    .select('network_id, nombre_tienda, codigo_tienda, wan1_provider:isp_providers_jj!wan1_provider_id(name), wan2_provider:isp_providers_jj!wan2_provider_id(name)')
+```
+
+#### ESTADO NUEVO (Después del Cambio)
+```typescript
+// types.ts (Fragmento)
+export interface NetworkFailure {
+  codigo_tienda?: string;
+  cruce_tienda?: string;
+  meraki_url?: string;
+  coordenadas_geo?: string; // NEW FIELD for mapping
+...
+}
+
+// Massive.tsx (Fragmento Query)
+const { data: invData } = await supabase
+    .from('devices_inventory_jj')
+    .select('network_id, nombre_tienda, codigo_tienda, coordenadas_geo, wan1_provider:isp_providers_jj!wan1_provider_id(name), ...') // + coordenadas_geo
+```
+
+* **Nuevo Componente:** `IncidentMapModal.tsx` creado para renderizar el mapa de Leaflet usando *CartoDB Dark Matter* como fondo. Los pines incluyen animación CSS (`animate-ping`) para dar sensación de urgencia (rojo brillante). Se autocalculan los límites (`bounds`) según las coordenadas válidas.
+* **UI de Tarjeta:** Se agregó un botón `<MapPinned />` ("Mapa") en `MassiveIncidentCard.tsx` debajo de "Tiendas Afectadas", que abre el modal flotante, sin girar la tarjeta principal.
+
 ---

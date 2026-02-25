@@ -11,6 +11,7 @@ export interface NetworkFailure {
   codigo_tienda?: string; // NEW FIELD added for display
   cruce_tienda?: string;  // NEW FIELD for geographical context
   meraki_url?: string; // NEW FIELD for direct link
+  coordenadas_geo?: string; // NEW FIELD for mapping
 
   // New fields for UI enhancement
   pais?: string;

@@ -1,0 +1,1205 @@
+{
+  "name": "00 - Nexus : Inventario Meraki",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://api.meraki.com/api/v1/organizations/1151666/uplinks/statuses",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ciscoMerakiApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -736,
+        1088
+      ],
+      "id": "7845cb3d-9aca-481f-8bdd-b4353e6ab587",
+      "name": "API Meaki : Uplink",
+      "credentials": {
+        "ciscoMerakiApi": {
+          "id": "bMWpqlv7ApZ8gayT",
+          "name": "Cisco Meraki account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.meraki.com/api/v1/organizations/1151666/inventory/devices",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ciscoMerakiApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -736,
+        624
+      ],
+      "id": "31f5502f-834e-4e96-84f2-47a90ca72d2a",
+      "name": "API Meaki : Inventario de Dispositivos",
+      "credentials": {
+        "ciscoMerakiApi": {
+          "id": "bMWpqlv7ApZ8gayT",
+          "name": "Cisco Meraki account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## APIS - ENDPOINT MERAKI\n\n**API Meaki : Clientes = https://api.meraki.com/api/v1/organizations/1151666/networks**\n\nAPI Meaki : Inventario de Dispositivos = https://api.meraki.com/api/v1/organizations/1151666/inventory/devices\nAPI Meaki : Resumen de la Red = https://api.meraki.com/api/v1/organizations/1151666/devices/statuses\nAPI Meaki : Latencia General = https://api.meraki.com/api/v1/organizations/1151666/devices/uplinksLossAndLatency\nAPI Meaki : Uplink = https://api.meraki.com/api/v1/organizations/1151666/uplinks/statuses\n",
+        "height": 240,
+        "width": 848
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1232,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "10776ecc-8263-4c6c-901f-d3a62786f5b0",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "url": "https://api.meraki.com/api/v1/organizations/1151666/networks",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ciscoMerakiApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -736,
+        432
+      ],
+      "id": "fb058bc8-c737-46d2-ab59-26d2968cd9e2",
+      "name": "API Meaki : Clientes",
+      "credentials": {
+        "ciscoMerakiApi": {
+          "id": "bMWpqlv7ApZ8gayT",
+          "name": "Cisco Meraki account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.meraki.com/api/v1/organizations/1151666/devices",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ciscoMerakiApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -736,
+        864
+      ],
+      "id": "c1d368ff-36f2-4228-a1ca-9ea57bf0a66b",
+      "name": "API Meaki : Ubicación Geografica",
+      "credentials": {
+        "ciscoMerakiApi": {
+          "id": "bMWpqlv7ApZ8gayT",
+          "name": "Cisco Meraki account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combineBySql",
+        "numberInputs": 4,
+        "query": "SELECT\n    -- Campos del Input 1 (Información de la Red)\n    input1.id,\n    input1.name,\n    input1.timeZone,\n    input1.url,\n    input1.notes,\n\n    -- Campos del Input 2 (Inventario / MAC)\n    input2.mac,\n    input2.countryCode,\n\n    -- Campos del Input 3 (Ubicación)\n    input3.lat,\n    input3.lng,\n\n    -- Campos del Input 4 (Estado / Uplink)\n    input4.serial,\n    input4.uplinks\n\nFROM\n    input4\n\n-- Unir Input 1: Basado solo en networkId (Las redes no tienen serial de dispositivo)\nLEFT JOIN input1\n    ON input4.networkId = input1.id\n\n-- Unir Input 2: Basado en Serial (y asegurando que sea la misma red)\nLEFT JOIN input2\n    ON input4.serial = input2.serial\n\n-- Unir Input 3: Basado en Serial (y asegurando que sea la misma red)\nLEFT JOIN input3\n    ON input4.serial = input3.serial",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -480,
+        704
+      ],
+      "id": "a46c05fd-a1ee-4ee4-8c80-9d6ecc224a17",
+      "name": "Merge: Datos Meraki"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    d.network_id, \n    d.nombre_tienda, \n    d.pais, \n    d.codigo_tienda, \n    d.meraki_serial, \n    d.raw_meraki_name,\n    d.meraki_url,\n    d.coordenadas_geo,\n    \n    -- Datos WAN 1 para Auditoría\n    d.wan1_provider_id,\n    p1.name as wan1_provider_name,\n    d.wan1_id_servicio,\n    d.wan1_tipo_servicio,\n    d.wan1_tipo_configuracion,\n    d.wan1_bw,\n    d.wan1_ip_publica,\n    d.wan1_ip_wan,\n    d.wan1_mascara,\n    d.wan1_gateway,\n    d.wan1_contingencia,\n\n    -- Datos WAN 2 para Auditoría\n    d.wan2_provider_id,\n    p2.name as wan2_provider_name,\n    d.wan2_id_servicio,\n    d.wan2_tipo_servicio,\n    d.wan2_tipo_configuracion,\n    d.wan2_bw,\n    d.wan2_ip_publica,\n    d.wan2_ip_wan,\n    d.wan2_mascara,\n    d.wan2_gateway,\n    d.wan2_contingencia\n\nFROM public.devices_inventory_jj d\nLEFT JOIN public.isp_providers_jj p1 ON d.wan1_provider_id = p1.id\nLEFT JOIN public.isp_providers_jj p2 ON d.wan2_provider_id = p2.id;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -16,
+        736
+      ],
+      "id": "e8b20cf9-6726-4b1c-b872-0511fa2a82db",
+      "name": "Supabase: Traer Inventario",
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "zv3CvTQjUWmJmOVa",
+          "name": "SOMMER NETWORK NEXUS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================================\n// SCRIPT DE SINCRONIZACIÓN MASIVA INICIAL (FORZADO)\n// Objetivo: Sobrescribir datos técnicos en BD con la verdad de Meraki\n// ================================================================\n\n// 1. Obtener datos\nconst merakiRawItems = items;\nconst merakiMap = new Map();\n\n// Funciones Auxiliares\nfunction getCountryFromTimeZone(tz) {\n    if (!tz) return null;\n    if (tz.includes('Caracas')) return 'VENEZUELA';\n    if (tz.includes('Bogota')) return 'COLOMBIA';\n    if (tz.includes('Argentina') || tz.includes('Buenos_Aires')) return 'ARGENTINA';\n    if (tz.includes('Santiago')) return 'CHILE';\n    if (tz.includes('Lima')) return 'PERU';\n    if (tz.includes('Panama')) return 'PANAMA';\n    return 'DESCONOCIDO';\n}\n\nfunction parseStoreName(rawName) {\n    const regex = /Tienda\\s+[A-Z]{2}\\s+(\\d+)\\s+(.+)$/i;\n    const match = rawName ? rawName.match(regex) : null;\n    if (match) {\n        return { codigo: match[1], nombre: match[2].trim() };\n    }\n    return { codigo: null, nombre: rawName };\n}\n\n// 2. PROCESAMIENTO Y CONSOLIDACIÓN\nfor (const item of merakiRawItems) {\n    const mk = item.json;\n    if (!mk.id) continue;\n\n    const netId = mk.id;\n\n    // Lógica para capturar siempre la mejor data disponible\n    // Si ya existe en el mapa, lo actualizamos si el nuevo dato es mejor\n    if (merakiMap.has(netId)) {\n        const existing = merakiMap.get(netId);\n        \n        // Agregar serial\n        if (mk.serial) existing.serials.add(mk.serial);\n        \n        // FORZAR COORDENADAS: Si el registro actual tiene lat/lng, sobrescribimos\n        // (A veces el primer dispositivo del stack no tiene GPS pero el segundo sí)\n        if (mk.lat && mk.lng && mk.lat !== 0 && mk.lng !== 0) {\n            existing.lat = mk.lat;\n            existing.lng = mk.lng;\n        }\n\n        // FORZAR UPLINKS: Si encontramos uplinks válidos, los tomamos\n        if (mk.uplinks && Array.isArray(mk.uplinks) && mk.uplinks.length > 0) {\n            // Preferimos datos que tengan IP\n            const hasIp = mk.uplinks.some(u => u.ip);\n            if (hasIp || existing.uplinks.length === 0) {\n                existing.uplinks = mk.uplinks;\n            }\n        }\n        \n    } else {\n        // Inicializar nuevo registro maestro\n        const pais = getCountryFromTimeZone(mk.timeZone);\n        const nameInfo = parseStoreName(mk.name);\n        \n        merakiMap.set(netId, {\n            network_id: netId,\n            pais: pais,\n            codigo_tienda: nameInfo.codigo,\n            nombre_tienda: nameInfo.nombre,\n            raw_meraki_name: mk.name,\n            meraki_url: mk.url,\n            lat: mk.lat,\n            lng: mk.lng,\n            serials: new Set(mk.serial ? [mk.serial] : []),\n            uplinks: mk.uplinks || [],\n            updated_at: new Date().toISOString(),\n            updated_by: 'Carga Masiva Inicial'\n        });\n    }\n}\n\n// 3. GENERAR SALIDA FINAL\nconst output = [];\n\nfor (const [key, value] of merakiMap) {\n    // A. Formatear Seriales\n    const serialsStr = Array.from(value.serials).sort().join(',');\n\n    // B. Formatear Coordenadas (Postgres POINT: lng, lat)\n    let coords = null;\n    if (value.lat && value.lng && value.lat !== 0 && value.lng !== 0) {\n        coords = `(${value.lng},${value.lat})`;\n    }\n\n    // C. Extraer Uplinks\n    let u1 = value.uplinks.find(u => u.interface === 'wan1');\n    let u2 = value.uplinks.find(u => u.interface === 'wan2');\n\n    output.push({\n        json: {\n            network_id: value.network_id,\n            \n            // Campos Generales\n            coordenadas_geo: coords,\n            meraki_url: value.meraki_url,\n            meraki_serial: serialsStr,\n            nombre_tienda: value.nombre_tienda,\n            codigo_tienda: value.codigo_tienda,\n            pais: value.pais,\n            raw_meraki_name: value.raw_meraki_name,\n            \n            // WAN 1\n            wan1_ip_wan: u1?.ip || null,\n            wan1_gateway: u1?.gateway || null,\n            wan1_ip_publica: u1?.publicIp || null,\n            wan1_tipo_configuracion: u1?.ipAssignedBy || null,\n            \n            // WAN 2\n            wan2_ip_wan: u2?.ip || null,\n            wan2_gateway: u2?.gateway || null,\n            wan2_ip_publica: u2?.publicIp || null,\n            wan2_tipo_configuracion: u2?.ipAssignedBy || null,\n\n            updated_at: value.updated_at,\n            updated_by: value.updated_by\n        }\n    });\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        736
+      ],
+      "id": "13b423bf-d726-4555-823b-d97aa9469fec",
+      "name": "Code: Estandarizar Meraki"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================================\n// 1. OBTENCIÓN DE DATOS\n// ================================================================\n\n// A. DATOS DE BASE DE DATOS (Vienen de la entrada inmediata)\nconst dbItems = items; \n\n// B. DATOS DE MERAKI (Vienen del nodo anterior de limpieza)\nlet merakiItems = [];\ntry {\n    merakiItems = $('Code: Estandarizar Meraki').all();\n} catch (error) {\n    console.log(\"Error leyendo datos estandarizados.\");\n}\n\n// ================================================================\n// 2. PREPARACIÓN Y MAPEO\n// ================================================================\n\n// Mapa de códigos ISO\nconst countryCodeMap = {\n    'VENEZUELA': 'VE', 'COLOMBIA': 'CO', 'ARGENTINA': 'AR',\n    'CHILE': 'CL', 'PERU': 'PE', 'ECUADOR': 'EC',\n    'PANAMA': 'PA', 'URUGUAY': 'UY', 'ESTADOS UNIDOS': 'US'\n};\n\nconst dbMap = new Map();\ndbItems.forEach(item => {\n    const d = item.json;\n    if (d && d.network_id) dbMap.set(d.network_id, d);\n});\n\n// Listas de Hallazgos\nconst listNuevos = [];      // Azul\nconst listSinProvee = [];   // Rojo (WAN1 vacío Y WAN2 vacío)\nconst listMono = [];        // Amarillo (WAN1 vacío O WAN2 vacío)\nconst listCambios = [];     // Naranja (Técnico)\nconst updatesToApply = [];  // Para BD\n\n// ================================================================\n// 3. FUNCIONES AUXILIARES\n// ================================================================\n\nfunction getStoreInfo(rawName, timeZone) {\n    let paisFull = 'DESCONOCIDO';\n    let paisCode = '??';\n    \n    if (timeZone) {\n        if (timeZone.includes('Caracas')) { paisFull = 'VENEZUELA'; paisCode = 'VE'; }\n        else if (timeZone.includes('Bogota')) { paisFull = 'COLOMBIA'; paisCode = 'CO'; }\n        else if (timeZone.includes('Argentina') || timeZone.includes('Buenos_Aires')) { paisFull = 'ARGENTINA'; paisCode = 'AR'; }\n        else if (timeZone.includes('Santiago')) { paisFull = 'CHILE'; paisCode = 'CL'; }\n        else if (timeZone.includes('Lima')) { paisFull = 'PERU'; paisCode = 'PE'; }\n    }\n    const regex = /Tienda\\s+[A-Z]{2}\\s+(\\d+)\\s+(.+)$/i;\n    const match = rawName ? rawName.match(regex) : null;\n    let codigo = 'S/C';\n    let nombre = rawName || 'Sin Nombre';\n\n    if (match) {\n        codigo = match[1];\n        nombre = match[2].trim();\n    }\n    return { pais: paisFull, pais_code: paisCode, codigo: codigo, nombre: nombre };\n}\n\nfunction formatCoords(lat, lng) {\n    if (!lat || !lng) return null;\n    return `(${lng},${lat})`;\n}\n\nfunction isDifferent(valMeraki, valDB) {\n    if (valMeraki === undefined || valMeraki === null) return false; \n    const m = String(valMeraki).trim();\n    const d = valDB ? String(valDB).trim() : \"\";\n    return m !== d;\n}\n\n// Generador de tablas Dinámico\nfunction createTable(dataList, type) {\n    if (dataList.length === 0) return \"\";\n    \n    dataList.sort((a, b) => (a.pais_code || \"\").localeCompare(b.pais_code || \"\") || (a.nombre_tienda || \"\").localeCompare(b.nombre_tienda || \"\"));\n    const rowsToShow = dataList.slice(0, 50);\n\n    let t = \"\";\n\n    // TIPO SIMPLE: Solo Pais y Tienda\n    if (type === 'SIMPLE') {\n        t = \"PAIS | TIENDA\\n\";\n        t += \"-----|------------------------------\\n\";\n        rowsToShow.forEach(row => {\n            const pais = (row.pais_code || \"??\").substring(0, 4).padEnd(4);\n            const tienda = (row.nombre_tienda || \"N/A\").substring(0, 30).padEnd(30);\n            t += `${pais} | ${tienda}\\n`;\n        });\n    } \n    // TIPO DETALLADO: Con columnas WAN\n    else {\n        t = \"PAIS | TIENDA               | WAN 1      | WAN 2\\n\";\n        t += \"-----|----------------------|------------|------------\\n\";\n        rowsToShow.forEach(row => {\n            const pais = (row.pais_code || \"??\").substring(0, 4).padEnd(4);\n            const tienda = (row.nombre_tienda || \"N/A\").substring(0, 20).padEnd(20);\n            const w1 = (row.wan1_display || \"-\").substring(0, 10).padEnd(10);\n            const w2 = (row.wan2_display || \"-\").substring(0, 10).padEnd(10);\n            t += `${pais} | ${tienda} | ${w1} | ${w2}\\n`;\n        });\n    }\n\n    if (dataList.length > 50) t += `... y ${dataList.length - 50} más.`;\n    return t;\n}\n\n// ================================================================\n// 4. LÓGICA DE AUDITORÍA\n// ================================================================\n\nfor (const mItem of merakiItems) {\n    const mk = mItem.json;\n    if (!mk.network_id) continue; \n\n    const netId = mk.network_id;\n    const serial = mk.meraki_serial; // Viene consolidado\n    const db = dbMap.get(netId);\n    \n    const info = getStoreInfo(mk.raw_meraki_name, null);\n    if (mk.pais) info.pais = mk.pais;\n    if (mk.nombre_tienda) info.nombre = mk.nombre_tienda;\n    \n    const paisCode = countryCodeMap[info.pais] || info.pais?.substring(0,2) || \"??\";\n\n    // --- CASO 1: NUEVO DISPOSITIVO (AZUL) ---\n    if (!db) {\n        listNuevos.push({\n            pais_code: paisCode,\n            nombre_tienda: info.nombre,\n            // Data Técnica para Insert\n            raw_data: mk\n        });\n        continue; \n    }\n\n    // --- ANÁLISIS DE PROVEEDORES (ROJO Y AMARILLO) ---\n    const p1 = db.wan1_provider_id; \n    const p2 = db.wan2_provider_id;\n    \n    const p1Name = db.wan1_provider_name || (p1 ? \"ID:\"+p1 : null);\n    const p2Name = db.wan2_provider_name || (p2 ? \"ID:\"+p2 : null);\n\n    // ROJO: Ambos vacíos\n    if (!p1 && !p2) {\n        listSinProvee.push({\n            pais_code: paisCode,\n            nombre_tienda: db.nombre_tienda,\n            network_id: netId\n        });\n    }\n    // AMARILLO: Monoenlace (XOR lógico: uno sí, el otro no)\n    else if ((!p1 && p2) || (p1 && !p2)) {\n        listMono.push({\n            pais_code: paisCode,\n            nombre_tienda: db.nombre_tienda,\n            wan1_display: p1Name || \"*\",\n            wan2_display: p2Name || \"*\",\n            network_id: netId\n        });\n    }\n\n    // --- CASO 3: CAMBIOS TÉCNICOS (NARANJA) ---\n    const updateData = {};\n    let hayCambios = false;\n    let changeW1 = false;\n    let changeW2 = false;\n\n    // A. Identidad\n    if (isDifferent(mk.raw_meraki_name, db.raw_meraki_name)) { updateData.raw_meraki_name = mk.raw_meraki_name; hayCambios = true; }\n    if (isDifferent(mk.meraki_serial, db.meraki_serial)) { updateData.meraki_serial = mk.meraki_serial; hayCambios = true; }\n    if (isDifferent(mk.coordenadas_geo, db.coordenadas_geo)) { updateData.coordenadas_geo = mk.coordenadas_geo; hayCambios = true; }\n    if (isDifferent(mk.meraki_url, db.meraki_url)) { updateData.meraki_url = mk.meraki_url; hayCambios = true; }\n    \n    // B. WAN 1\n    if (mk.wan1_ip_wan && isDifferent(mk.wan1_ip_wan, db.wan1_ip_wan)) { updateData.wan1_ip_wan = mk.wan1_ip_wan; changeW1 = true; }\n    if (mk.wan1_gateway && isDifferent(mk.wan1_gateway, db.wan1_gateway)) { updateData.wan1_gateway = mk.wan1_gateway; changeW1 = true; }\n    if (mk.wan1_ip_publica && isDifferent(mk.wan1_ip_publica, db.wan1_ip_publica)) { updateData.wan1_ip_publica = mk.wan1_ip_publica; changeW1 = true; }\n    if (mk.wan1_tipo_configuracion && isDifferent(mk.wan1_tipo_configuracion, db.wan1_tipo_configuracion)) { updateData.wan1_tipo_configuracion = mk.wan1_tipo_configuracion; changeW1 = true; }\n\n    // C. WAN 2\n    if (mk.wan2_ip_wan && isDifferent(mk.wan2_ip_wan, db.wan2_ip_wan)) { updateData.wan2_ip_wan = mk.wan2_ip_wan; changeW2 = true; }\n    if (mk.wan2_gateway && isDifferent(mk.wan2_gateway, db.wan2_gateway)) { updateData.wan2_gateway = mk.wan2_gateway; changeW2 = true; }\n    if (mk.wan2_ip_publica && isDifferent(mk.wan2_ip_publica, db.wan2_ip_publica)) { updateData.wan2_ip_publica = mk.wan2_ip_publica; changeW2 = true; }\n    if (mk.wan2_tipo_configuracion && isDifferent(mk.wan2_tipo_configuracion, db.wan2_tipo_configuracion)) { updateData.wan2_tipo_configuracion = mk.wan2_tipo_configuracion; changeW2 = true; }\n\n    if (hayCambios || changeW1 || changeW2) {\n         listCambios.push({\n            pais_code: paisCode,\n            nombre_tienda: db.nombre_tienda,\n            wan1_display: changeW1 ? \"*\" : \"-\",\n            wan2_display: changeW2 ? \"*\" : \"-\",\n            network_id: netId,\n            datos_update: updateData \n        });\n        \n        updatesToApply.push({\n            network_id: netId,\n            ...updateData,\n            updated_at: new Date().toISOString(),\n            updated_by: 'N8n Auto-Sync'\n        });\n    }\n}\n\n// ================================================================\n// 5. SALIDA FINAL\n// ================================================================\n\nreturn [{\n    json: {\n        resumen: {\n            nuevos: {\n                count: listNuevos.length,\n                table: createTable(listNuevos, 'SIMPLE')\n            },\n            sin_proveedores: { // Rojo\n                count: listSinProvee.length,\n                table: createTable(listSinProvee, 'SIMPLE')\n            },\n            monoenlaces: { // Amarillo\n                count: listMono.length,\n                table: createTable(listMono, 'DETAILED')\n            },\n            cambios: { // Naranja\n                count: listCambios.length,\n                table: createTable(listCambios, 'DETAILED')\n            },\n            total_alertas: listNuevos.length + listSinProvee.length + listMono.length + listCambios.length\n        },\n        raw_nuevos: listNuevos.map(i => i.raw_data),\n        raw_cambios: updatesToApply,\n        channel: 'C07FZE49ZPW'\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        736
+      ],
+      "id": "8eb12fc9-910b-460b-8e7c-b2ddf15d7d8d",
+      "name": "Code: Auditoría y Comparación",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n(() => {\n  const data = $json.resumen;\n  // Usamos el canal que viene del nodo anterior\n  const targetChannel = $json.channel || 'C07FZE49ZPW'; \n  const attachments = [];\n\n  // 1. BLOQUE AZUL (Nuevos Merakis)\n  if (data.nuevos && data.nuevos.count > 0) {\n    attachments.push({\n      \"color\": \"#27A6F5\",\n      \"blocks\": [\n        {\n          \"type\": \"header\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"ℹ️ Nuevos MX Encontrados\", \"emoji\": true }\n        },\n        {\n          \"type\": \"section\",\n          \"text\": { \"type\": \"mrkdwn\", \"text\": \"Se han detectado *\" + data.nuevos.count + \"* nuevos equipos Meraki en la red.\" }\n        },\n        {\n          \"type\": \"section\",\n          \"text\": { \"type\": \"mrkdwn\", \"text\": \"```\\n\" + data.nuevos.table + \"\\n```\" }\n        }\n      ]\n    });\n  }\n\n  // 2. BLOQUE ROJO (Sin Proveedores - WAN1 \"Y\" WAN2 vacíos)\n  if (data.sin_proveedores && data.sin_proveedores.count > 0) {\n    attachments.push({\n      \"color\": \"#E61010\",\n      \"blocks\": [\n        {\n          \"type\": \"header\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"‼️ Lista de tiendas sin proveedores registrados\", \"emoji\": true }\n        },\n        {\n          \"type\": \"section\",\n          \"text\": { \"type\": \"mrkdwn\", \"text\": \"Hay *\" + data.sin_proveedores.count + \"* tiendas donde la **WAN1 y la WAN2** están vacías en BD.\" }\n        },\n        {\n          \"type\": \"section\",\n          \"text\": { \"type\": \"mrkdwn\", \"text\": \"```\\n\" + data.sin_proveedores.table + \"\\n```\" }\n        }\n      ]\n    });\n  }\n\n  // 3. BLOQUE AMARILLO (Monoenlaces - WAN1 \"O\" WAN2 vacío)\n  if (data.monoenlaces && data.monoenlaces.count > 0) {\n    attachments.push({\n      \"color\": \"#F5CF27\",\n      \"blocks\": [\n        {\n          \"type\": \"header\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"⚠️ Listado de tiendas registradas como 'Monoenlaces'\", \"emoji\": true }\n        },\n        {\n          \"type\": \"section\",\n          \"text\": { \"type\": \"mrkdwn\", \"text\": \"Hay *\" + data.monoenlaces.count + \"* tiendas donde la **WAN1 o la WAN2** está vacía (un solo proveedor).\" }\n        },\n        {\n          \"type\": \"section\",\n          \"text\": { \"type\": \"mrkdwn\", \"text\": \"```\\n\" + data.monoenlaces.table + \"\\n```\" }\n        },\n        {\n          \"type\": \"context\",\n          \"elements\": [{ \"type\": \"mrkdwn\", \"text\": \"(*) El asterisco señala la WAN que está vacía en base de datos.\" }]\n        }\n      ]\n    });\n  }\n\n  // 4. BLOQUE NARANJA (Cambios Técnicos - Opcional)\n  if (data.cambios && data.cambios.count > 0) {\n    attachments.push({\n      \"color\": \"#ffaa00\", \n      \"blocks\": [\n        { \"type\": \"header\", \"text\": { \"type\": \"plain_text\", \"text\": \"🔄 Cambios Técnicos Detectados\", \"emoji\": true } },\n        { \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \"Se actualizarán datos técnicos (IP, Serial, Config) en *\" + data.cambios.count + \"* equipos.\" } },\n        { \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \"```\\n\" + data.cambios.table + \"\\n```\" } },\n        { \"type\": \"context\", \"elements\": [{ \"type\": \"mrkdwn\", \"text\": \"(*) Indica en qué interfaz hubo cambios respecto a la BD.\" }] }\n      ]\n    });\n  }\n\n  // Link de gestión al final\n  if (attachments.length > 0) {\n      attachments.push({\n          \"color\": \"#ffffff\",\n          \"blocks\": [\n              { \"type\": \"divider\" },\n              { \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \"👉 <https://google.com| Gestionar Inventario en Nexus>\" } }\n          ]\n      });\n  } else {\n       return { \"channel\": targetChannel, \"text\": \"✅ Auditoría Completada: Inventario sincronizado y sin novedades.\" };\n  }\n\n  return {\n    \"channel\": targetChannel,\n    \"text\": \"📋 *Reporte de Auditoría de Inventario Meraki*\",\n    \"attachments\": attachments\n  };\n})()\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        432,
+        736
+      ],
+      "id": "7d3bca54-0276-4abc-bdc3-3281f3b849ca",
+      "name": "Slack: Reporte de Inventario ",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wXVhrJbOPKc34rz4",
+          "name": "Slack: Nexus"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. RECUPERAR DATOS DEL AUDITOR (Miramos hacia atrás)\n// Usamos .first() porque el auditor devuelve un solo objeto resumen\nconst input = $('Code: Auditoría y Comparación').first().json; \n\nconst acciones = [];\n\n// 2. PROCESAR NUEVOS (INSERT)\nif (input.raw_nuevos && Array.isArray(input.raw_nuevos)) {\n    input.raw_nuevos.forEach(item => {\n        acciones.push({\n            json: {\n                accion_bd: 'INSERT',\n                // Datos directos\n                network_id: item.network_id,\n                meraki_serial: item.meraki_serial,\n                raw_meraki_name: item.raw_meraki_name,\n                nombre_tienda: item.nombre_tienda,\n                codigo_tienda: item.codigo_tienda,\n                pais: item.pais,\n                meraki_url: item.meraki_url,\n                coordenadas_geo: item.coordenadas_geo,\n                // Datos técnicos WAN (pueden ser null)\n                wan1_ip_wan: item.wan1_ip_wan,\n                wan1_gateway: item.wan1_gateway,\n                wan1_ip_publica: item.wan1_ip_publica,\n                wan1_tipo_configuracion: item.wan1_tipo_configuracion,\n                wan2_ip_wan: item.wan2_ip_wan,\n                wan2_gateway: item.wan2_gateway,\n                wan2_ip_publica: item.wan2_ip_publica,\n                wan2_tipo_configuracion: item.wan2_tipo_configuracion,\n                // Default\n                tipo_enlace_calculado: 'Redundante',\n                created_by: 'N8n Auditor'\n            }\n        });\n    });\n}\n\n// 3. PROCESAR CAMBIOS (UPDATE)\nif (input.raw_cambios && Array.isArray(input.raw_cambios)) {\n    input.raw_cambios.forEach(item => {\n        // item.datos_update tiene los campos específicos que cambiaron\n        const datos = item.datos_update;\n        \n        acciones.push({\n            json: {\n                accion_bd: 'UPDATE',\n                network_id: item.network_id,\n                // Fusionamos los datos a actualizar en el nivel raíz del JSON\n                ...datos, \n                updated_by: 'N8n Auditor',\n                updated_at: new Date().toISOString()\n            }\n        });\n    });\n}\n\nreturn acciones;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        736
+      ],
+      "id": "72c6d324-1911-49c9-b62e-5e2afd9bc332",
+      "name": "Code: Preparar Ejecución BD"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.accion_bd }}",
+                    "rightValue": "INSERT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "1bbfeacb-d81f-4de5-bc52-e5e926d72a17"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "8a5d13bf-7c5b-4adf-87f4-fa5aa9315e43",
+                    "leftValue": "={{ $json.accion_bd }}",
+                    "rightValue": "UPDATE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        832,
+        736
+      ],
+      "id": "fb8867fd-5118-44f7-ae79-72300a2988b3",
+      "name": "Switch: Router BD"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO public.devices_inventory_jj (\n  network_id, meraki_serial, raw_meraki_name, nombre_tienda, codigo_tienda, pais, \n  meraki_url, coordenadas_geo, tipo_enlace_calculado, created_by,\n  wan1_ip_wan, wan1_gateway, wan1_ip_publica, wan1_tipo_configuracion,\n  wan2_ip_wan, wan2_gateway, wan2_ip_publica, wan2_tipo_configuracion\n) VALUES (\n  $1, $2, $3, $4, $5, $6, \n  $7, $8, $9, $10,\n  $11, $12, $13, $14,\n  $15, $16, $17, $18\n)\nON CONFLICT (network_id) DO NOTHING;",
+        "options": {
+          "queryReplacement": "={{ [\n  $json.network_id,              // $1\n  $json.meraki_serial,           // $2\n  $json.raw_meraki_name,         // $3\n  $json.nombre_tienda,           // $4\n  $json.codigo_tienda,           // $5\n  $json.pais,                    // $6\n  $json.meraki_url,              // $7\n  $json.coordenadas_geo,         // $8\n  $json.tipo_enlace_calculado,   // $9\n  $json.created_by,              // $10\n  $json.wan1_ip_wan,             // $11\n  $json.wan1_gateway,            // $12\n  $json.wan1_ip_publica,         // $13\n  $json.wan1_tipo_configuracion, // $14\n  $json.wan2_ip_wan,             // $15\n  $json.wan2_gateway,            // $16\n  $json.wan2_ip_publica,         // $17\n  $json.wan2_tipo_configuracion  // $18\n] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        944,
+        464
+      ],
+      "id": "cab3de2d-a66f-4138-927d-49a8688cbc29",
+      "name": "Postgres: Insertar Nuevos",
+      "credentials": {
+        "postgres": {
+          "id": "zv3CvTQjUWmJmOVa",
+          "name": "SOMMER NETWORK NEXUS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE public.devices_inventory_jj\nSET\n  -- Si el parámetro viene NULL (porque no cambió), mantiene el valor actual de la columna\n  nombre_tienda = COALESCE($2, nombre_tienda),\n  codigo_tienda = COALESCE($3, codigo_tienda),\n  meraki_serial = COALESCE($4, meraki_serial),\n  raw_meraki_name = COALESCE($5, raw_meraki_name),\n  meraki_url = COALESCE($6, meraki_url),\n  coordenadas_geo = COALESCE($7, coordenadas_geo),\n  \n  -- Wan 1\n  wan1_ip_wan = COALESCE($8, wan1_ip_wan),\n  wan1_gateway = COALESCE($9, wan1_gateway),\n  wan1_ip_publica = COALESCE($10, wan1_ip_publica),\n  wan1_tipo_configuracion = COALESCE($11, wan1_tipo_configuracion),\n  \n  -- Wan 2\n  wan2_ip_wan = COALESCE($12, wan2_ip_wan),\n  wan2_gateway = COALESCE($13, wan2_gateway),\n  wan2_ip_publica = COALESCE($14, wan2_ip_publica),\n  wan2_tipo_configuracion = COALESCE($15, wan2_tipo_configuracion),\n\n  updated_by = $16,\n  updated_at = NOW()\nWHERE network_id = $1;",
+        "options": {
+          "queryReplacement": "={{ [\n  $json.network_id,               // $1\n  $json.nombre_tienda || null,    // $2 (Si no existe en JSON, manda null y SQL ignora)\n  $json.codigo_tienda || null,    // $3\n  $json.meraki_serial || null,    // $4\n  $json.raw_meraki_name || null,  // $5\n  $json.meraki_url || null,       // $6\n  $json.coordenadas_geo || null,  // $7\n  $json.wan1_ip_wan || null,      // $8\n  $json.wan1_gateway || null,     // $9\n  $json.wan1_ip_publica || null,  // $10\n  $json.wan1_tipo_configuracion || null, // $11\n  $json.wan2_ip_wan || null,      // $12\n  $json.wan2_gateway || null,     // $13\n  $json.wan2_ip_publica || null,  // $14\n  $json.wan2_tipo_configuracion || null, // $15\n  $json.updated_by                // $16\n] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        944,
+        992
+      ],
+      "id": "4af64466-ef5f-4d98-be50-721190752ce1",
+      "name": "Postgres: Aplicar Cambios",
+      "credentials": {
+        "postgres": {
+          "id": "zv3CvTQjUWmJmOVa",
+          "name": "SOMMER NETWORK NEXUS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Inventario Meraki\n\n## **Funciones :**\n\n## 1. _Extraer_ información de las apis de MX.\n## 2. _Combinar_ y formar un arreglo con todos los datos.\n## 3. _Extraer_ los datos registrados en la BD.\n## 4. _Comparar_ si existe algun nuevo MX o si algun dato cambio.\n## 5. _Clasificar_ y enviar un reporte vía Slack con los escenarios encontrados.\n## 6. _Registrar_ y/o actualizar los datos en la BD.\n## 7. _Extraer_ la información de la BD actualizada.\n## 8. _Crear_ un respaldo en una carpeta en _Google Drive._",
+        "height": 512,
+        "width": 960,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -256,
+        976
+      ],
+      "typeVersion": 1,
+      "id": "417544de-a968-4dfd-9106-a59145777f8c",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM public.devices_inventory_jj ORDER BY network_id ASC;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1056,
+        720
+      ],
+      "id": "0b934782-f40a-4a87-b164-93446227446c",
+      "name": "Supabase: Leer Todo",
+      "credentials": {
+        "postgres": {
+          "id": "zv3CvTQjUWmJmOVa",
+          "name": "SOMMER NETWORK NEXUS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://script.google.com/macros/s/AKfycbyAN42M5plo7du5Jr9XsKBIcf7PJfo0evVPnZGDumqoNkaajb2fKWdIpwn-ukVssX51/exec",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1424,
+        464
+      ],
+      "id": "03c98823-d5ba-415e-b846-ca80639375a8",
+      "name": "Enviar a Google Sheets (GAS)",
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener todos los registros del nodo anterior\nconst allData = items.map(item => item.json);\n\n// Retornar UN SOLO ítem que contiene toda la data dentro\nreturn [{\n  json: {\n    data: allData\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1312,
+        720
+      ],
+      "id": "8c7e4f39-de1e-4ca0-a31b-a8545372c5bd",
+      "name": "Code: Agrupar para Respaldo"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "x30IzokMKv4gGK9g",
+          "mode": "list",
+          "cachedResultName": "devices_inventory_jj",
+          "cachedResultUrl": "/projects/CDaqlJYxkAdaMPfm/datatables/x30IzokMKv4gGK9g"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "network_id",
+              "keyValue": "={{ $json.network_id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "es_tienda_top": "={{ $json.es_tienda_top }}",
+            "es_24_horas": "={{ $json.es_24_horas }}",
+            "wan1_contingencia": "={{ $json.wan1_contingencia }}",
+            "wan2_contingencia": "={{ $json.wan2_contingencia }}",
+            "meraki_serial": "={{ $json.meraki_url }}",
+            "meraki_model": "={{ $json.meraki_model }}",
+            "raw_meraki_name": "={{ $json.raw_meraki_name }}",
+            "meraki_url": "={{ $json.meraki_url }}",
+            "pais": "={{ $json.pais }}",
+            "codigo_tienda": "={{ $json.codigo_tienda }}",
+            "nombre_tienda": "={{ $json.nombre_tienda }}",
+            "punto_cardinal": "={{ $json.punto_cardinal }}",
+            "direccion_domicilio": "={{ $json.direccion_domicilio }}",
+            "coordenadas_geo": "={{ $json.coordenadas_geo }}",
+            "correo_tienda": "={{ $json.correo_tienda }}",
+            "observaciones": "={{ $json.observaciones }}",
+            "modelo_switch": "={{ $json.modelo_switch }}",
+            "ip_switch": "={{ $json.ip_switch }}",
+            "wan1_provider_id": "={{ $json.wan1_provider_id }}",
+            "wan1_id_servicio": "={{ $json.wan1_id_servicio }}",
+            "wan1_tipo_servicio": "={{ $json.wan1_tipo_servicio }}",
+            "wan1_tipo_configuracion": "={{ $json.wan1_tipo_configuracion }}",
+            "wan1_bw": "={{ $json.wan1_bw }}",
+            "wan1_ip_publica": "={{ $json.wan1_ip_publica }}",
+            "wan1_ip_wan": "={{ $json.wan1_ip_wan }}",
+            "wan1_mascara": "={{ $json.wan1_mascara }}",
+            "wan1_gateway": "={{ $json.wan1_gateway }}",
+            "wan1_puerto_router": "={{ $json.wan1_puerto_router }}",
+            "wan2_provider_id": "={{ $json.wan2_provider_id }}",
+            "wan2_id_servicio": "={{ $json.wan2_id_servicio }}",
+            "wan2_tipo_servicio": "={{ $json.wan2_tipo_servicio }}",
+            "wan2_tipo_configuracion": "={{ $json.wan2_tipo_configuracion }}",
+            "wan2_bw": "={{ $json.wan2_bw }}",
+            "wan2_ip_publica": "={{ $json.wan2_ip_publica }}",
+            "wan2_ip_wan": "={{ $json.wan2_ip_wan }}",
+            "wan2_mascara": "={{ $json.wan2_mascara }}",
+            "wan2_gateway": "={{ $json.wan2_gateway }}",
+            "wan2_puerto_router": "={{ $json.wan2_puerto_router }}",
+            "tipo_enlace_calculado": "={{ $json.tipo_enlace_calculado }}",
+            "last_seen_api": "={{ $json.last_seen_api }}",
+            "created_at": "={{ $json.created_at }}",
+            "updated_at": "={{ $json.updated_at }}",
+            "created_by": "={{ $json.created_by }}",
+            "updated_by": "={{ $json.updated_by }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "network_id",
+              "displayName": "network_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "meraki_serial",
+              "displayName": "meraki_serial",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "meraki_model",
+              "displayName": "meraki_model",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "raw_meraki_name",
+              "displayName": "raw_meraki_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "meraki_url",
+              "displayName": "meraki_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "pais",
+              "displayName": "pais",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "codigo_tienda",
+              "displayName": "codigo_tienda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "nombre_tienda",
+              "displayName": "nombre_tienda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "punto_cardinal",
+              "displayName": "punto_cardinal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "direccion_domicilio",
+              "displayName": "direccion_domicilio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "coordenadas_geo",
+              "displayName": "coordenadas_geo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "correo_tienda",
+              "displayName": "correo_tienda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "es_tienda_top",
+              "displayName": "es_tienda_top",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "es_24_horas",
+              "displayName": "es_24_horas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "observaciones",
+              "displayName": "observaciones",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "modelo_switch",
+              "displayName": "modelo_switch",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "ip_switch",
+              "displayName": "ip_switch",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "wan1_provider_id",
+              "displayName": "wan1_provider_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "wan1_id_servicio",
+              "displayName": "wan1_id_servicio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "wan1_tipo_servicio",
+              "displayName": "wan1_tipo_servicio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "wan1_tipo_configuracion",
+              "displayName": "wan1_tipo_configuracion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "wan1_bw",
+              "displayName": "wan1_bw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "wan1_ip_publica",
+              "displayName": "wan1_ip_publica",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "wan1_ip_wan",
+              "displayName": "wan1_ip_wan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "wan1_mascara",
+              "displayName": "wan1_mascara",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "wan1_gateway",
+              "displayName": "wan1_gateway",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "wan1_puerto_router",
+              "displayName": "wan1_puerto_router",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "wan1_contingencia",
+              "displayName": "wan1_contingencia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "wan2_provider_id",
+              "displayName": "wan2_provider_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "wan2_id_servicio",
+              "displayName": "wan2_id_servicio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "wan2_tipo_servicio",
+              "displayName": "wan2_tipo_servicio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "wan2_tipo_configuracion",
+              "displayName": "wan2_tipo_configuracion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "wan2_bw",
+              "displayName": "wan2_bw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "wan2_ip_publica",
+              "displayName": "wan2_ip_publica",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "wan2_ip_wan",
+              "displayName": "wan2_ip_wan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "wan2_mascara",
+              "displayName": "wan2_mascara",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "wan2_gateway",
+              "displayName": "wan2_gateway",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "wan2_puerto_router",
+              "displayName": "wan2_puerto_router",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "wan2_contingencia",
+              "displayName": "wan2_contingencia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "tipo_enlace_calculado",
+              "displayName": "tipo_enlace_calculado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "last_seen_api",
+              "displayName": "last_seen_api",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_by",
+              "displayName": "created_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "updated_by",
+              "displayName": "updated_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1696,
+        976
+      ],
+      "id": "ffc0e2bc-fecc-431b-923a-8877c3ef3797",
+      "name": "N8N Table : Respaldo Inventario Meraki"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Obtenemos el array gigante que viene en la propiedad 'data' del nodo anterior\nconst listaFilas = items[0].json.data;\n\n// Validación de seguridad: Si no hay lista, no hacemos nada\nif (!listaFilas || !Array.isArray(listaFilas)) {\n  return [];\n}\n\n// 2. Desempaquetamos\n// Transformamos el array simple en el formato de items de N8n\n// Esto hará que el siguiente nodo (la Tabla) reciba fila por fila\nreturn listaFilas.map(fila => {\n  return {\n    json: fila\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1424,
+        976
+      ],
+      "id": "6d099f66-cd12-42cc-a38e-8fb5d9f17b52",
+      "name": "Code: Desempaquetar para Tabla"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1072,
+        768
+      ],
+      "id": "fea252ac-0967-4416-a2b6-c0ef633e3e9b",
+      "name": "Disparador : 9am"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "API Meaki : Inventario de Dispositivos": {
+      "main": [
+        [
+          {
+            "node": "Merge: Datos Meraki",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "API Meaki : Uplink": {
+      "main": [
+        [
+          {
+            "node": "Merge: Datos Meraki",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "API Meaki : Clientes": {
+      "main": [
+        [
+          {
+            "node": "Merge: Datos Meraki",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API Meaki : Ubicación Geografica": {
+      "main": [
+        [
+          {
+            "node": "Merge: Datos Meraki",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge: Datos Meraki": {
+      "main": [
+        [
+          {
+            "node": "Code: Estandarizar Meraki",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Traer Inventario": {
+      "main": [
+        [
+          {
+            "node": "Code: Auditoría y Comparación",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Estandarizar Meraki": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Traer Inventario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Auditoría y Comparación": {
+      "main": [
+        [
+          {
+            "node": "Slack: Reporte de Inventario ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Reporte de Inventario ": {
+      "main": [
+        [
+          {
+            "node": "Code: Preparar Ejecución BD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Preparar Ejecución BD": {
+      "main": [
+        [
+          {
+            "node": "Switch: Router BD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch: Router BD": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Insertar Nuevos",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Postgres: Aplicar Cambios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Aplicar Cambios": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Leer Todo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Insertar Nuevos": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Leer Todo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Leer Todo": {
+      "main": [
+        [
+          {
+            "node": "Code: Agrupar para Respaldo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Agrupar para Respaldo": {
+      "main": [
+        [
+          {
+            "node": "Enviar a Google Sheets (GAS)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code: Desempaquetar para Tabla",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar a Google Sheets (GAS)": {
+      "main": [
+        []
+      ]
+    },
+    "Code: Desempaquetar para Tabla": {
+      "main": [
+        [
+          {
+            "node": "N8N Table : Respaldo Inventario Meraki",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Disparador : 9am": {
+      "main": [
+        [
+          {
+            "node": "API Meaki : Inventario de Dispositivos",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "API Meaki : Ubicación Geografica",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "API Meaki : Clientes",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "API Meaki : Uplink",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "89750aaa-3dfa-4296-b3a0-94f77df01f69",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "711d50e124213b735042c98c8c11f15f25c693a7f4a2c9947e94bc2c86a3c4d9"
+  },
+  "id": "aqiakt9WuhPj7Q-Vnvlxz",
+  "tags": [
+    {
+      "updatedAt": "2026-02-19T12:26:26.778Z",
+      "createdAt": "2025-11-04T12:35:34.440Z",
+      "id": "acrrGzSUMhn7yc7g",
+      "name": "SOMMER NETWORK NEXUS"
+    }
+  ]
+}

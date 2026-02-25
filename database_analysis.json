@@ -1,0 +1,2050 @@
+{
+  "schemas": [
+    {
+      "table_name": "areas_jj",
+      "column_name": "id_area",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "areas_jj",
+      "column_name": "name",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "areas_jj",
+      "column_name": "description",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "areas_jj",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "areas_jj",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "areas_jj",
+      "column_name": "created_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "areas_jj",
+      "column_name": "updated_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "chat_memory_jj",
+      "column_name": "id",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": "nextval('chat_memory_id_seq'::regclass)"
+    },
+    {
+      "table_name": "chat_memory_jj",
+      "column_name": "session_id",
+      "data_type": "character varying",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "chat_memory_jj",
+      "column_name": "message",
+      "data_type": "jsonb",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "daily_network_stats_jj",
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "daily_network_stats_jj",
+      "column_name": "report_date",
+      "data_type": "date",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "daily_network_stats_jj",
+      "column_name": "country",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "daily_network_stats_jj",
+      "column_name": "provider_name",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "daily_network_stats_jj",
+      "column_name": "total_incidents",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": "0"
+    },
+    {
+      "table_name": "daily_network_stats_jj",
+      "column_name": "total_downtime_minutes",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": "0"
+    },
+    {
+      "table_name": "daily_network_stats_jj",
+      "column_name": "unique_sites_affected",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": "0"
+    },
+    {
+      "table_name": "daily_network_stats_jj",
+      "column_name": "daily_availability",
+      "data_type": "numeric",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "daily_network_stats_jj",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "network_id",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "meraki_serial",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "meraki_model",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "raw_meraki_name",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "meraki_url",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "pais",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "codigo_tienda",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "nombre_tienda",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "punto_cardinal",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "direccion_domicilio",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "coordenadas_geo",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "correo_tienda",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "es_tienda_top",
+      "data_type": "boolean",
+      "is_nullable": "YES",
+      "column_default": "false"
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "es_24_horas",
+      "data_type": "boolean",
+      "is_nullable": "YES",
+      "column_default": "false"
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "observaciones",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "modelo_switch",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "ip_switch",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "wan1_provider_id",
+      "data_type": "bigint",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "wan1_id_servicio",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "wan1_tipo_servicio",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "wan1_tipo_configuracion",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "wan1_bw",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "wan1_ip_publica",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "wan1_ip_wan",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "wan1_mascara",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "wan1_gateway",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "wan1_puerto_router",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "wan1_contingencia",
+      "data_type": "boolean",
+      "is_nullable": "YES",
+      "column_default": "false"
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "wan2_provider_id",
+      "data_type": "bigint",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "wan2_id_servicio",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "wan2_tipo_servicio",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "wan2_tipo_configuracion",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "wan2_bw",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "wan2_ip_publica",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "wan2_ip_wan",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "wan2_mascara",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "wan2_gateway",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "wan2_puerto_router",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "wan2_contingencia",
+      "data_type": "boolean",
+      "is_nullable": "YES",
+      "column_default": "false"
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "tipo_enlace_calculado",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": "'Redundante'::text"
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "last_seen_api",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "created_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": "'System'::text"
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "updated_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "devices_inventory_jj",
+      "column_name": "es_monitoreable",
+      "data_type": "boolean",
+      "is_nullable": "YES",
+      "column_default": "true"
+    },
+    {
+      "table_name": "home_content_jj",
+      "column_name": "id_content",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "home_content_jj",
+      "column_name": "card_type",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "home_content_jj",
+      "column_name": "title",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "home_content_jj",
+      "column_name": "description",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "home_content_jj",
+      "column_name": "image_url",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "home_content_jj",
+      "column_name": "is_active",
+      "data_type": "boolean",
+      "is_nullable": "YES",
+      "column_default": "true"
+    },
+    {
+      "table_name": "home_content_jj",
+      "column_name": "display_order",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": "1"
+    },
+    {
+      "table_name": "home_content_jj",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "home_content_jj",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "home_content_jj",
+      "column_name": "created_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "home_content_jj",
+      "column_name": "updated_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "isp_contacts_jj",
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "isp_contacts_jj",
+      "column_name": "provider_id",
+      "data_type": "bigint",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "isp_contacts_jj",
+      "column_name": "level",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "isp_contacts_jj",
+      "column_name": "method",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "isp_contacts_jj",
+      "column_name": "value",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "isp_contacts_jj",
+      "column_name": "contact_name",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "isp_contacts_jj",
+      "column_name": "last_seen_api",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "isp_contacts_jj",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "isp_contacts_jj",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "isp_contacts_jj",
+      "column_name": "created_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": "'System'::text"
+    },
+    {
+      "table_name": "isp_contacts_jj",
+      "column_name": "updated_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "isp_providers_jj",
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "isp_providers_jj",
+      "column_name": "name",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "isp_providers_jj",
+      "column_name": "country",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "isp_providers_jj",
+      "column_name": "portal_url",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "isp_providers_jj",
+      "column_name": "observations",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "isp_providers_jj",
+      "column_name": "last_seen_api",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "isp_providers_jj",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "isp_providers_jj",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "isp_providers_jj",
+      "column_name": "created_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": "'System'::text"
+    },
+    {
+      "table_name": "isp_providers_jj",
+      "column_name": "updated_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "logs_frontend_jj",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "logs_frontend_jj",
+      "column_name": "action",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "logs_frontend_jj",
+      "column_name": "details",
+      "data_type": "jsonb",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "logs_frontend_jj",
+      "column_name": "user_email",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "logs_frontend_jj",
+      "column_name": "created_at",
+      "data_type": "timestamp without time zone",
+      "is_nullable": "NO",
+      "column_default": "(now() AT TIME ZONE 'America/Caracas'::text)"
+    },
+    {
+      "table_name": "logs_frontend_jj",
+      "column_name": "log_seq",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "provider_name",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "country",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "total_provider_inventory",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "threshold_used",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "total_affected_initial",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "current_active_count",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "recovery_percentage",
+      "data_type": "double precision",
+      "is_nullable": "YES",
+      "column_default": "0"
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "status",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": "'Activa'::text"
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "recovery_status",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": "'En Progreso'::text"
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "classification",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": "'MASIVA'::text"
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "root_cause",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": "'MASIVA DEL PROVEEDOR'::text"
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "liability",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "start_time",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "recovery_start_time",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "end_time",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "slack_thread_ts",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "logs",
+      "data_type": "jsonb",
+      "is_nullable": "YES",
+      "column_default": "'[]'::jsonb"
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "last_seen_api",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "created_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": "'System'::text"
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "updated_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "email_status_isp",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "email_ts_isp",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "msg_close_sent_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "closure_note",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "closed_by_user",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "column_name": "closed_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "network_id",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "status",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": "'Activa'::text"
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "diagnosis_text",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "evidence_data",
+      "data_type": "jsonb",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "created_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": "'Nexus'::text"
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "updated_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "slack_thread_ts",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "email_status",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "email_ts",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "analyst_notes",
+      "data_type": "jsonb",
+      "is_nullable": "YES",
+      "column_default": "'[]'::jsonb"
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "related_failure_id",
+      "data_type": "bigint",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "root_cause_degradacion",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "liability_degradacion",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "recovery_start_time",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "msg_recovery_sent_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "msg_close_sent_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "related_massive_id",
+      "data_type": "bigint",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "assigned_to",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "system_logs",
+      "data_type": "jsonb",
+      "is_nullable": "YES",
+      "column_default": "'[]'::jsonb"
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "closure_note",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "closed_by_user",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "closed_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "column_name": "duration_minutes",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "network_id",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "lifecycle_stage",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": "'Activa'::text"
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "site_impact",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": "'PARCIAL'::text"
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "status",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": "'Activa'::text"
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "es_falla_masiva",
+      "data_type": "boolean",
+      "is_nullable": "YES",
+      "column_default": "false"
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "slack_thread_ts",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "wan1_status",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": "'UP'::text"
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "wan1_massive_incident_id",
+      "data_type": "bigint",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "wan1_ticket_ref",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "wan1_start_time",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "wan1_recovery_start_time",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "wan2_status",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": "'UP'::text"
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "wan2_massive_incident_id",
+      "data_type": "bigint",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "wan2_ticket_ref",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "wan2_start_time",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "wan2_recovery_start_time",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "root_cause",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "liability",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "analyst_notes",
+      "data_type": "jsonb",
+      "is_nullable": "YES",
+      "column_default": "'[]'::jsonb"
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "analyst_closure_check",
+      "data_type": "boolean",
+      "is_nullable": "YES",
+      "column_default": "false"
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "closure_classification",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "closure_note",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "closed_by_user",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "closed_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "start_time",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "last_detected_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "recovery_time",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "recovery_start_time",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "duration_minutes",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "logs",
+      "data_type": "jsonb",
+      "is_nullable": "YES",
+      "column_default": "'[]'::jsonb"
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "last_seen_api",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "created_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": "'System'::text"
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "updated_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "show_in_dashboard",
+      "data_type": "boolean",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "relapse_count",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": "0"
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "is_flapping",
+      "data_type": "boolean",
+      "is_nullable": "YES",
+      "column_default": "false"
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "wan1_downtime_minutes",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": "0"
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "wan2_downtime_minutes",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": "0"
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "total_downtime_minutes",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": "0"
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "msg_recovery_sent_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "msg_close_sent_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "email_status_w1",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "email_ts_w1",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "email_status_w2",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "email_ts_w2",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_failures_jj",
+      "column_name": "sentinel_diagnosis_added",
+      "data_type": "boolean",
+      "is_nullable": "YES",
+      "column_default": "false"
+    },
+    {
+      "table_name": "network_heartbeat_logs_jj",
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "network_heartbeat_logs_jj",
+      "column_name": "network_id",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "network_heartbeat_logs_jj",
+      "column_name": "interface",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "network_heartbeat_logs_jj",
+      "column_name": "status_meraki",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "network_heartbeat_logs_jj",
+      "column_name": "latency_ms",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_heartbeat_logs_jj",
+      "column_name": "loss_percent",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_heartbeat_logs_jj",
+      "column_name": "public_ip",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_heartbeat_logs_jj",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "network_metrics_history_jj",
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "network_metrics_history_jj",
+      "column_name": "network_id",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "network_metrics_history_jj",
+      "column_name": "meraki_serial",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_metrics_history_jj",
+      "column_name": "uplink_interface",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_metrics_history_jj",
+      "column_name": "destination_ip",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_metrics_history_jj",
+      "column_name": "loss_pct",
+      "data_type": "double precision",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_metrics_history_jj",
+      "column_name": "latency_ms",
+      "data_type": "double precision",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "network_metrics_history_jj",
+      "column_name": "recorded_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "profiles_jj",
+      "column_name": "id_profile",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "profiles_jj",
+      "column_name": "name",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "profiles_jj",
+      "column_name": "description",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "profiles_jj",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "profiles_jj",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "profiles_jj",
+      "column_name": "created_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "profiles_jj",
+      "column_name": "updated_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "provider_tasks_jj",
+      "column_name": "tp_id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "provider_tasks_jj",
+      "column_name": "tp_country",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "provider_tasks_jj",
+      "column_name": "tp_provider_id",
+      "data_type": "bigint",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "provider_tasks_jj",
+      "column_name": "tp_start_time",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "provider_tasks_jj",
+      "column_name": "tp_end_time",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "provider_tasks_jj",
+      "column_name": "tp_duration_minutes",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "provider_tasks_jj",
+      "column_name": "tp_title",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "provider_tasks_jj",
+      "column_name": "tp_observation",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "provider_tasks_jj",
+      "column_name": "tp_affected_stores",
+      "data_type": "ARRAY",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "provider_tasks_jj",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "timezone('utc'::text, now())"
+    },
+    {
+      "table_name": "provider_tasks_jj",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "timezone('utc'::text, now())"
+    },
+    {
+      "table_name": "provider_tasks_jj",
+      "column_name": "created_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "provider_tasks_jj",
+      "column_name": "updated_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "provider_tasks_jj",
+      "column_name": "email_isp_task_ts",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "roles_jj",
+      "column_name": "id_role",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "roles_jj",
+      "column_name": "name",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "roles_jj",
+      "column_name": "permissions",
+      "data_type": "jsonb",
+      "is_nullable": "YES",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "roles_jj",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "roles_jj",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "roles_jj",
+      "column_name": "created_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "roles_jj",
+      "column_name": "updated_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "site_branding_jj",
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "site_branding_jj",
+      "column_name": "asset_key",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "site_branding_jj",
+      "column_name": "asset_url",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "site_branding_jj",
+      "column_name": "description",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "site_branding_jj",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "site_branding_jj",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "slack_channels_jj",
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "slack_channels_jj",
+      "column_name": "name_channel",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "slack_channels_jj",
+      "column_name": "channel_id",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "slack_channels_jj",
+      "column_name": "webhook_channel",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "slack_channels_jj",
+      "column_name": "description_channel",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "slack_channels_jj",
+      "column_name": "create_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "slack_channels_jj",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "timezone('utc'::text, now())"
+    },
+    {
+      "table_name": "slack_channels_jj",
+      "column_name": "update_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "slack_channels_jj",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "timezone('utc'::text, now())"
+    },
+    {
+      "table_name": "users_jj",
+      "column_name": "id_user",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "users_jj",
+      "column_name": "first_name",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "users_jj",
+      "column_name": "last_name",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "users_jj",
+      "column_name": "email",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "users_jj",
+      "column_name": "profile_image_url",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "users_jj",
+      "column_name": "password_hash",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "users_jj",
+      "column_name": "last_password_update",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "users_jj",
+      "column_name": "id_profile",
+      "data_type": "bigint",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "users_jj",
+      "column_name": "id_area",
+      "data_type": "bigint",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "users_jj",
+      "column_name": "id_role",
+      "data_type": "bigint",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "users_jj",
+      "column_name": "is_active",
+      "data_type": "boolean",
+      "is_nullable": "YES",
+      "column_default": "true"
+    },
+    {
+      "table_name": "users_jj",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "users_jj",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "users_jj",
+      "column_name": "created_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "users_jj",
+      "column_name": "updated_by",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    }
+  ],
+  "functions": [
+    {
+      "function_name": "register_ai_degradation_jj",
+      "function_def": "CREATE OR REPLACE FUNCTION public.register_ai_degradation_jj(p_network_id text, p_massive_id bigint, p_failure_id bigint, p_existing_degrad_id bigint, p_assigned_to text, p_diagnosis text, p_evidence jsonb)\n RETURNS jsonb\n LANGUAGE plpgsql\nAS $function$\r\nDECLARE\r\n    v_degrad_id bigint := p_existing_degrad_id;\r\n    v_action text := 'NONE';\r\n    v_send_slack boolean := false;\r\n    v_send_email boolean := false;\r\n    v_slack_ts text;\r\n    v_email_status text;\r\n    v_log_msg text;\r\n    v_now text := to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS');\r\nBEGIN\r\n    v_log_msg := '🤖 [DIAGNÓSTICO NEXUS] ' || p_diagnosis;\r\n\r\n    -- A. LÓGICA DE REGISTRO / ACTUALIZACIÓN INDIVIDUAL\r\n    IF v_degrad_id IS NULL THEN\r\n        -- NUEVA DEGRADACIÓN: Insertamos el registro maestro vinculando todo\r\n        INSERT INTO public.network_degradations_jj (\r\n            network_id, status, diagnosis_text, evidence_data, assigned_to, related_massive_id, related_failure_id, updated_at, updated_by, system_logs\r\n        ) VALUES (\r\n            p_network_id, 'Activa', p_diagnosis, p_evidence, p_assigned_to, p_massive_id, p_failure_id, NOW(), 'Nexus', \r\n            jsonb_build_array(jsonb_build_object('log', v_now || ' : ' || v_log_msg))\r\n        ) RETURNING id INTO v_degrad_id;\r\n        \r\n        v_send_slack := true;\r\n        v_send_email := true;\r\n    ELSE\r\n        -- DEGRADACIÓN EXISTENTE: Actualizamos evidencias y añadimos al log de sistema (No sobrescribimos notas humanas)\r\n        SELECT slack_thread_ts, email_status INTO v_slack_ts, v_email_status FROM public.network_degradations_jj WHERE id = v_degrad_id;\r\n        \r\n        UPDATE public.network_degradations_jj\r\n        SET diagnosis_text = p_diagnosis, evidence_data = p_evidence, assigned_to = p_assigned_to, updated_at = NOW(), updated_by = 'Nexus',\r\n            status = CASE WHEN status = 'Pendiente por cierre' THEN 'Activa' ELSE status END,\r\n            system_logs = COALESCE(system_logs, '[]'::jsonb) || jsonb_build_array(jsonb_build_object('log', v_now || ' : ' || v_log_msg))\r\n        WHERE id = v_degrad_id;\r\n\r\n        -- IDEMPOTENCIA: Si no se han enviado, dar la orden a n8n de enviarlos ahora\r\n        IF v_slack_ts IS NULL THEN v_send_slack := true; END IF;\r\n        IF v_email_status IS NULL THEN v_send_email := true; END IF;\r\n    END IF;\r\n\r\n    -- B. LÓGICA DE INYECCIÓN AL PADRE (Falla Masiva)\r\n    IF p_massive_id IS NOT NULL THEN\r\n        -- Si esta degradación pertenece a una masiva, anexamos el reporte de la IA a la bitácora del Padre\r\n        UPDATE public.massive_incidents_jj\r\n        SET logs = COALESCE(logs, '[]'::jsonb) || jsonb_build_array(jsonb_build_object('log', v_now || ' : 🤖 [NEXUS - Aporte de Tienda] ' || p_diagnosis))\r\n        WHERE id = p_massive_id\r\n        -- Seguro anti-duplicados para no inundar el log de la masiva con la misma nota\r\n        AND NOT COALESCE(logs::text, '') LIKE '%' || p_diagnosis || '%';\r\n    END IF;\r\n\r\n    -- Devolvemos las instrucciones exactas a n8n\r\n    RETURN jsonb_build_object(\r\n        'degrad_id', v_degrad_id,\r\n        'assigned_to', p_assigned_to,\r\n        'trigger_slack', v_send_slack,\r\n        'trigger_email', v_send_email\r\n    );\r\nEND;\r\n$function$\n"
+    },
+    {
+      "function_name": "nexus_master_triage_jj",
+      "function_def": "CREATE OR REPLACE FUNCTION public.nexus_master_triage_jj(p_devices jsonb)\n RETURNS jsonb\n LANGUAGE plpgsql\nAS $function$\r\nDECLARE\r\n    v_device jsonb;\r\n    v_net_id text;\r\n    v_status text;\r\n    v_isp_name text;\r\n    v_massive_id bigint;\r\n    v_failure_id bigint;\r\n    v_degrad_id bigint;\r\n    v_requires_ai jsonb := '[]'::jsonb;\r\n    v_recovered_count int := 0;\r\n    v_massive_discard_count int := 0;\r\nBEGIN\r\n    -- 1. SANACIÓN MASIVA: Procesar los que están 'online'\r\n    WITH online_nets AS (\r\n        SELECT value->>'networkId' AS network_id\r\n        FROM jsonb_array_elements(p_devices)\r\n        WHERE value->>'status' = 'online'\r\n    ),\r\n    updated_obs AS (\r\n        UPDATE public.network_degradations_jj nd\r\n        SET status = 'En observación', recovery_start_time = NOW(), updated_at = NOW(), updated_by = 'Nexus'\r\n        FROM online_nets onet\r\n        WHERE nd.network_id = onet.network_id AND nd.status IN ('Activa', 'En gestión')\r\n        RETURNING nd.id\r\n    )\r\n    SELECT count(*) INTO v_recovered_count FROM updated_obs;\r\n\r\n    -- Cerrar los que pasaron su cuarentena de 60 min\r\n    UPDATE public.network_degradations_jj\r\n    SET status = 'Pendiente por cierre', updated_at = NOW(), updated_by = 'Nexus'\r\n    WHERE status = 'En observación' AND recovery_start_time <= NOW() - INTERVAL '60 minutes';\r\n\r\n    -- 2. SUPRESIÓN Y FILTRADO: Procesar los que están 'alerting'\r\n    FOR v_device IN SELECT * FROM jsonb_array_elements(p_devices)\r\n    LOOP\r\n        v_status := v_device->>'status';\r\n        v_net_id := v_device->>'networkId';\r\n\r\n        IF v_status = 'alerting' THEN\r\n            -- A. Saber de qué ISP es esta tienda\r\n            SELECT provider_1_name INTO v_isp_name\r\n            FROM public.devices_inventory_jj WHERE network_id = v_net_id;\r\n\r\n            -- B. Buscar si ese ISP tiene un Incidente Masivo Activo\r\n            SELECT id INTO v_massive_id\r\n            FROM public.massive_incidents_jj\r\n            WHERE provider_name = v_isp_name AND status IN ('Activa', 'En gestión', 'En observación')\r\n            LIMIT 1;\r\n\r\n            IF v_massive_id IS NOT NULL THEN\r\n                -- C. ESTÁ EN MASIVA: Suprimimos de la IA, pero documentamos el aporte.\r\n                v_massive_discard_count := v_massive_discard_count + 1;\r\n\r\n                -- Buscamos el caso individual abierto para relacionarlo\r\n                SELECT id INTO v_failure_id FROM public.network_failures_jj\r\n                WHERE network_id = v_net_id AND lifecycle_stage IN ('Activa', 'En gestión', 'En observación', 'Intermitencia')\r\n                ORDER BY created_at DESC LIMIT 1;\r\n\r\n                -- Buscamos si ya tiene tarjeta morada\r\n                SELECT id INTO v_degrad_id FROM public.network_degradations_jj\r\n                WHERE network_id = v_net_id AND status IN ('Activa', 'En gestión', 'En observación')\r\n                ORDER BY created_at DESC LIMIT 1;\r\n\r\n                IF v_degrad_id IS NULL THEN\r\n                    INSERT INTO public.network_degradations_jj (network_id, status, diagnosis_text, related_failure_id, updated_at, updated_by)\r\n                    VALUES (v_net_id, 'Activa', '⚠️ [SUPRIMIDO POR NEXUS] Degradación aislada omitida. La tienda se encuentra bajo afectación por Falla Masiva del proveedor ' || COALESCE(v_isp_name, 'ISP') || '.', v_failure_id, NOW(), 'Nexus');\r\n                ELSE\r\n                    UPDATE public.network_degradations_jj\r\n                    SET diagnosis_text = '⚠️ [SUPRIMIDO POR NEXUS] Degradación aislada omitida. La tienda se encuentra bajo afectación por Falla Masiva del proveedor ' || COALESCE(v_isp_name, 'ISP') || '.',\r\n                        related_failure_id = v_failure_id, updated_at = NOW(), updated_by = 'Nexus'\r\n                    WHERE id = v_degrad_id;\r\n                END IF;\r\n            ELSE\r\n                -- D. NO ES MASIVA: Es un problema aislado real. Lo empacamos para la IA.\r\n                v_requires_ai := v_requires_ai || v_device;\r\n            END IF;\r\n        END IF;\r\n    END LOOP;\r\n\r\n    -- Devolvemos el reporte a n8n\r\n    RETURN jsonb_build_object(\r\n        'alerting_for_ai', v_requires_ai,\r\n        'massive_discarded', v_massive_discard_count,\r\n        'recovered', v_recovered_count\r\n    );\r\nEND;\r\n$function$\n"
+    },
+    {
+      "function_name": "close_massive_incident_jj",
+      "function_def": "CREATE OR REPLACE FUNCTION public.close_massive_incident_jj(p_massive_id bigint, p_root_cause text, p_liability text, p_closure_note text, p_closed_by_user text)\n RETURNS jsonb\n LANGUAGE plpgsql\nAS $function$\r\nDECLARE\r\n    v_updated_individuals int;\r\n    v_log_msg_massive text;\r\n    v_log_msg_individual text;\r\n    v_now timestamp with time zone := NOW();\r\n    v_formatted_date text := to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS');\r\nBEGIN\r\n    -- 1. CONSTRUCCIÓN DE MENSAJES PARA BITÁCORAS\r\n    v_log_msg_massive := 'Nota de cierre: ' || p_closure_note || '. El caso pasa de \"Pendiente por cierre\" a \"Resuelta\". Cerrado por: ' || p_closed_by_user;\r\n    v_log_msg_individual := 'Nota de cierre (Heredada de Falla Masiva ID ' || p_massive_id || '): ' || p_closure_note || '. El caso pasa a \"Resuelta\". Cerrado por: ' || p_closed_by_user;\r\n\r\n    -- 2. CIERRE DE LA FALLA MASIVA (EL PADRE)\r\n    UPDATE public.massive_incidents_jj\r\n    SET \r\n        status = 'Resuelta',\r\n        root_cause = p_root_cause,\r\n        liability = p_liability,\r\n        closure_note = p_closure_note,\r\n        closed_by_user = p_closed_by_user,\r\n        closed_at = v_now,\r\n        end_time = v_now,\r\n        updated_at = v_now,\r\n        logs = COALESCE(logs, '[]'::jsonb) || jsonb_build_array(\r\n            jsonb_build_object('log', v_formatted_date || ' : ' || v_log_msg_massive)\r\n        )\r\n    WHERE id = p_massive_id;\r\n\r\n    -- 3. CIERRE EN CASCADA DE FALLAS INDIVIDUALES (LOS HIJOS)\r\n    WITH updated_rows AS (\r\n        UPDATE public.network_failures_jj\r\n        SET \r\n            lifecycle_stage = 'Resuelta',\r\n            status = 'Resuelta',\r\n            root_cause = p_root_cause,\r\n            liability = p_liability,\r\n            closure_note = p_closure_note,\r\n            closed_by_user = p_closed_by_user,\r\n            closed_at = v_now,\r\n            analyst_closure_check = true,\r\n            updated_at = v_now,\r\n            analyst_notes = COALESCE(analyst_notes, '[]'::jsonb) || jsonb_build_array(\r\n                jsonb_build_object('log', v_formatted_date || ' : ' || v_log_msg_individual)\r\n            )\r\n        -- Condición: Que la tienda tenga este ID de Masiva en WAN1 o WAN2, y que no esté cerrada ya.\r\n        WHERE (wan1_massive_incident_id = p_massive_id OR wan2_massive_incident_id = p_massive_id)\r\n          AND lifecycle_stage != 'Resuelta'\r\n        RETURNING id\r\n    )\r\n    SELECT count(*) INTO v_updated_individuals FROM updated_rows;\r\n\r\n    -- 4. RESPUESTA AL FRONTEND\r\n    RETURN jsonb_build_object(\r\n        'success', true,\r\n        'massive_id', p_massive_id,\r\n        'individual_cases_closed', v_updated_individuals,\r\n        'message', 'Falla masiva y ' || v_updated_individuals || ' tiendas hijas cerradas exitosamente.'\r\n    );\r\nEND;\r\n$function$\n"
+    },
+    {
+      "function_name": "close_massive_incident_jj",
+      "function_def": "CREATE OR REPLACE FUNCTION public.close_massive_incident_jj(p_massive_id bigint, p_root_cause text, p_closure_note text, p_closed_by_user text)\n RETURNS jsonb\n LANGUAGE plpgsql\nAS $function$\r\nDECLARE\r\n    v_updated_individuals int;\r\n    v_log_msg text;\r\n    v_now timestamp with time zone := NOW();\r\n    v_formatted_date text := to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS');\r\nBEGIN\r\n    -- 1. ACTUALIZAR LA FALLA MASIVA (EL PADRE)\r\n    v_log_msg := 'Nota de cierre: ' || p_closure_note || '. El caso pasa de \"Pendiente por cierre\" a \"Resuelta\". Cerrado por: ' || p_closed_by_user;\r\n    \r\n    UPDATE public.massive_incidents_jj\r\n    SET \r\n        status = 'Resuelta',\r\n        root_cause = p_root_cause,\r\n        closure_note = p_closure_note,\r\n        closed_by_user = p_closed_by_user,\r\n        closed_at = v_now,\r\n        end_time = v_now,\r\n        updated_at = v_now,\r\n        logs = COALESCE(logs, '[]'::jsonb) || jsonb_build_array(\r\n            jsonb_build_object('log', v_formatted_date || ' : ' || v_log_msg)\r\n        )\r\n    WHERE id = p_massive_id;\r\n\r\n    -- 2. CIERRE EN CASCADA DE FALLAS INDIVIDUALES (LOS HIJOS)\r\n    v_log_msg := 'Nota de cierre (Heredada de Falla Masiva ID ' || p_massive_id || '): ' || p_closure_note || '. El caso pasa a \"Resuelta\". Cerrado por: ' || p_closed_by_user;\r\n\r\n    WITH updated_rows AS (\r\n        UPDATE public.network_failures_jj\r\n        SET \r\n            lifecycle_stage = 'Resuelta',\r\n            status = 'Resuelta',\r\n            root_cause = p_root_cause,\r\n            closure_note = p_closure_note,\r\n            closed_by_user = p_closed_by_user,\r\n            closed_at = v_now,\r\n            analyst_closure_check = true,\r\n            updated_at = v_now,\r\n            analyst_notes = COALESCE(analyst_notes, '[]'::jsonb) || jsonb_build_array(\r\n                jsonb_build_object('log', v_formatted_date || ' : ' || v_log_msg)\r\n            )\r\n        WHERE (wan1_massive_incident_id = p_massive_id OR wan2_massive_incident_id = p_massive_id)\r\n          AND lifecycle_stage != 'Resuelta'\r\n        RETURNING id\r\n    )\r\n    SELECT count(*) INTO v_updated_individuals FROM updated_rows;\r\n\r\n    -- 3. RETORNAR RESULTADO\r\n    RETURN jsonb_build_object(\r\n        'success', true,\r\n        'massive_id', p_massive_id,\r\n        'individual_cases_closed', v_updated_individuals,\r\n        'message', 'Falla masiva y ' || v_updated_individuals || ' tiendas hijas cerradas exitosamente.'\r\n    );\r\nEND;\r\n$function$\n"
+    },
+    {
+      "function_name": "process_site_health_jj",
+      "function_def": "CREATE OR REPLACE FUNCTION public.process_site_health_jj(p_network_id text, p_wan1_status text, p_wan2_status text, p_wan1_log jsonb, p_wan2_log jsonb)\n RETURNS jsonb\n LANGUAGE plpgsql\nAS $function$ \r\nDECLARE\r\n    v_store_name text; v_pais text; v_link_type text;\r\n    v_wan1_prov_id bigint; v_wan2_prov_id bigint;\r\n    v_prov1_name text; v_prov2_name text;\r\n    v_codigo_tienda text; v_meraki_url text;\r\n    v_es_monitoreable boolean;\r\n    v_direccion_domicilio text; v_correo_tienda text;\r\n    v_w1_id_servicio text; v_w1_ip_publica text; v_w1_ip_wan text; v_w1_gateway text; \r\n    v_w1_email_soporte text; v_w1_tlf text; v_w1_wa text; \r\n    v_w2_id_servicio text; v_w2_ip_publica text; v_w2_ip_wan text; v_w2_gateway text; \r\n    v_w2_email_soporte text; v_w2_tlf text; v_w2_wa text; \r\n    v_w1_contacto_resumen text; v_w2_contacto_resumen text; v_log_contactos_full text; \r\n    v_w1_down boolean; v_w2_down boolean; v_new_impact text; \r\n    v_fail_id bigint; v_old_impact text; v_old_stage text; v_old_ts text; v_old_recov_start timestamp; \r\n    v_es_masiva_tienda boolean; v_ticket_ref text; v_relapse_count int; \r\n    v_msg_recovery_at timestamp; v_msg_close_at timestamp; v_start_time timestamp;\r\n    v_store_massive_id bigint; v_is_flapping boolean;\r\n    v_out_w1_recov timestamp; v_out_w2_recov timestamp; v_out_w1_min int; v_out_w2_min int;\r\n    v_wan_afectada_texto text; v_wan_recuperada_texto text;\r\n    v_provider_affected_id bigint; v_provider_affected_name text;\r\n    v_total_provider_devices int; v_total_provider_failures int;\r\n    v_massive_threshold float; v_massive_id bigint; v_massive_ts text; v_massive_start timestamp;\r\n    v_recovery_pct float; v_last_recovery_pct float; v_massive_status text;\r\n    v_massive_msg_close_at timestamp;\r\n    v_massive_logs jsonb; \r\n    v_provider_support_email text; v_affected_stores_json jsonb; v_count_total_impact int; v_count_partial_impact int; v_stores_text_list text; v_massive_log_text text;\r\n    v_massive_initial int; v_massive_remaining int; v_relative_recov_pct float;\r\n    v_is_massive_context boolean := false;\r\n    v_target_channel text; c_channel_incidencias text := 'C07FZE49ZPW'; c_channel_interno text := 'C07FZE49ZPW'; v_log_msg text;\r\nBEGIN\r\n    -- 1. CARGA DE DATOS BÁSICA\r\n    SELECT i.nombre_tienda, i.pais, i.codigo_tienda, i.meraki_url, i.es_monitoreable, i.tipo_enlace_calculado, i.wan1_provider_id, i.wan2_provider_id, p1.name, p2.name, i.direccion_domicilio, i.correo_tienda, i.wan1_id_servicio, i.wan1_ip_publica, i.wan1_ip_wan, i.wan1_gateway, i.wan2_id_servicio, i.wan2_ip_publica, i.wan2_ip_wan, i.wan2_gateway,\r\n           (SELECT value FROM public.isp_contacts_jj c WHERE c.provider_id = i.wan1_provider_id AND c.level = 'Nivel 1' AND c.method = 'Correo' AND value IS NOT NULL LIMIT 1),\r\n           (SELECT value FROM public.isp_contacts_jj c WHERE c.provider_id = i.wan1_provider_id AND c.level = 'Nivel 1' AND c.method = 'Llamada' LIMIT 1),\r\n           (SELECT value FROM public.isp_contacts_jj c WHERE c.provider_id = i.wan1_provider_id AND c.level = 'Nivel 1' AND c.method = 'Whatsapp' LIMIT 1),\r\n           (SELECT value FROM public.isp_contacts_jj c WHERE c.provider_id = i.wan2_provider_id AND c.level = 'Nivel 1' AND c.method = 'Correo' AND value IS NOT NULL LIMIT 1),\r\n           (SELECT value FROM public.isp_contacts_jj c WHERE c.provider_id = i.wan2_provider_id AND c.level = 'Nivel 1' AND c.method = 'Llamada' LIMIT 1),\r\n           (SELECT value FROM public.isp_contacts_jj c WHERE c.provider_id = i.wan2_provider_id AND c.level = 'Nivel 1' AND c.method = 'Whatsapp' LIMIT 1)\r\n    INTO v_store_name, v_pais, v_codigo_tienda, v_meraki_url, v_es_monitoreable, v_link_type, v_wan1_prov_id, v_wan2_prov_id, v_prov1_name, v_prov2_name, v_direccion_domicilio, v_correo_tienda, v_w1_id_servicio, v_w1_ip_publica, v_w1_ip_wan, v_w1_gateway, v_w2_id_servicio, v_w2_ip_publica, v_w2_ip_wan, v_w2_gateway, v_w1_email_soporte, v_w1_tlf, v_w1_wa, v_w2_email_soporte, v_w2_tlf, v_w2_wa\r\n    FROM public.devices_inventory_jj i LEFT JOIN public.isp_providers_jj p1 ON i.wan1_provider_id = p1.id LEFT JOIN public.isp_providers_jj p2 ON i.wan2_provider_id = p2.id WHERE i.network_id = p_network_id;\r\n\r\n    IF v_store_name IS NULL THEN RETURN jsonb_build_object('action', 'SKIP', 'msg', 'No inventory'); END IF;\r\n    IF v_es_monitoreable IS FALSE THEN RETURN jsonb_build_object('action', 'NONE', 'msg', 'Sitio excluido de monitoreo'); END IF;\r\n\r\n    v_w1_contacto_resumen := COALESCE('🔹 WAN1 [' || v_prov1_name || '] - Nivel 1: ✉️ ' || v_w1_email_soporte || ' | 📞 ' || v_w1_tlf || ' | 📱 ' || v_w1_wa, '🔹 WAN1: No configurada');\r\n    v_w2_contacto_resumen := COALESCE('🔹 WAN2 [' || v_prov2_name || '] - Nivel 1: ✉️ ' || v_w2_email_soporte || ' | 📞 ' || v_w2_tlf || ' | 📱 ' || v_w2_wa, '🔹 WAN2: No configurada');\r\n    v_log_contactos_full := E'[INFO CONTACTO PROVEEDORES]\\n' || v_w1_contacto_resumen || E'\\n' || v_w2_contacto_resumen || ' - Nexus';\r\n\r\n    INSERT INTO public.network_heartbeat_logs_jj (network_id, interface, status_meraki, created_at) VALUES (p_network_id, 'wan1', p_wan1_status, NOW()), (p_network_id, 'wan2', p_wan2_status, NOW());\r\n\r\n    v_w1_down := (p_wan1_status IN ('failed', 'not connected') AND v_wan1_prov_id IS NOT NULL);\r\n    v_w2_down := (p_wan2_status IN ('failed', 'not connected') AND v_wan2_prov_id IS NOT NULL);\r\n\r\n    IF v_w1_down AND v_w2_down THEN v_new_impact := 'TOTAL'; ELSIF (v_w1_down OR v_w2_down) AND v_link_type = 'Monoenlace' THEN v_new_impact := 'TOTAL'; ELSIF (v_w1_down OR v_w2_down) THEN v_new_impact := 'PARCIAL'; ELSE v_new_impact := 'OK'; END IF;\r\n    IF v_new_impact = 'TOTAL' THEN v_target_channel := c_channel_incidencias; ELSE v_target_channel := c_channel_interno; END IF;\r\n\r\n    SELECT id, site_impact, lifecycle_stage, slack_thread_ts, recovery_start_time, es_falla_masiva, COALESCE(wan1_ticket_ref, wan2_ticket_ref), relapse_count, msg_recovery_sent_at, msg_close_sent_at, start_time, COALESCE(wan1_massive_incident_id, wan2_massive_incident_id), is_flapping\r\n    INTO v_fail_id, v_old_impact, v_old_stage, v_old_ts, v_old_recov_start, v_es_masiva_tienda, v_ticket_ref, v_relapse_count, v_msg_recovery_at, v_msg_close_at, v_start_time, v_store_massive_id, v_is_flapping\r\n    FROM public.network_failures_jj WHERE network_id = p_network_id AND lifecycle_stage NOT IN ('Resuelta', 'Falso Positivo') LIMIT 1;\r\n\r\n    IF v_w1_down AND v_w2_down THEN v_wan_afectada_texto := 'WAN1 - ' || COALESCE(v_prov1_name, 'N/A') || ' / WAN2 - ' || COALESCE(v_prov2_name, 'N/A');\r\n    ELSIF v_w1_down THEN v_wan_afectada_texto := 'WAN1 - ' || COALESCE(v_prov1_name, 'N/A');\r\n    ELSIF v_w2_down THEN v_wan_afectada_texto := 'WAN2 - ' || COALESCE(v_prov2_name, 'N/A'); END IF;\r\n\r\n    IF NOT v_w1_down AND NOT v_w2_down THEN v_wan_recuperada_texto := 'Ambas WAN';\r\n    ELSIF NOT v_w1_down AND v_old_impact = 'TOTAL' THEN v_wan_recuperada_texto := 'WAN1 - ' || COALESCE(v_prov1_name, 'N/A');\r\n    ELSIF NOT v_w2_down AND v_old_impact = 'TOTAL' THEN v_wan_recuperada_texto := 'WAN2 - ' || COALESCE(v_prov2_name, 'N/A');\r\n    ELSE v_wan_recuperada_texto := 'WAN'; END IF; \r\n\r\n    -- ==============================================================================\r\n    -- 2. CÁLCULO DE FALLA MASIVA\r\n    -- ==============================================================================\r\n    v_provider_affected_id := NULL;\r\n    IF v_w1_down THEN v_provider_affected_id := v_wan1_prov_id; ELSIF v_w2_down THEN v_provider_affected_id := v_wan2_prov_id; END IF;\r\n    IF v_new_impact = 'OK' AND v_store_massive_id IS NOT NULL THEN SELECT p.id INTO v_provider_affected_id FROM public.massive_incidents_jj m JOIN public.isp_providers_jj p ON m.provider_name = p.name WHERE m.id = v_store_massive_id LIMIT 1; END IF;\r\n\r\n    IF v_provider_affected_id IS NOT NULL THEN\r\n        SELECT name INTO v_provider_affected_name FROM public.isp_providers_jj WHERE id = v_provider_affected_id;\r\n        \r\n        SELECT id, slack_thread_ts, recovery_percentage, start_time, status, msg_close_sent_at, logs \r\n        INTO v_massive_id, v_massive_ts, v_last_recovery_pct, v_massive_start, v_massive_status, v_massive_msg_close_at, v_massive_logs\r\n        FROM public.massive_incidents_jj WHERE provider_name = v_provider_affected_name AND country = v_pais AND status != 'Resuelta' LIMIT 1;\r\n        \r\n        SELECT count(*) INTO v_total_provider_devices FROM public.devices_inventory_jj WHERE (wan1_provider_id = v_provider_affected_id OR wan2_provider_id = v_provider_affected_id) AND pais = v_pais;\r\n        SELECT count(*) INTO v_total_provider_failures FROM public.network_failures_jj f JOIN public.devices_inventory_jj i ON f.network_id = i.network_id WHERE f.lifecycle_stage IN ('Activa', 'En gestión', 'Intermitencia') AND i.pais = v_pais AND ((f.wan1_status = 'DOWN' AND i.wan1_provider_id = v_provider_affected_id) OR (f.wan2_status = 'DOWN' AND i.wan2_provider_id = v_provider_affected_id));\r\n        \r\n        IF v_new_impact != 'OK' AND v_fail_id IS NULL THEN v_total_provider_failures := v_total_provider_failures + 1; END IF; \r\n        IF v_new_impact = 'OK' AND v_old_stage IN ('Activa', 'En gestión', 'Intermitencia') THEN v_total_provider_failures := GREATEST(0, v_total_provider_failures - 1); END IF; \r\n        IF v_total_provider_devices > 0 THEN v_massive_threshold := (v_total_provider_failures::float / v_total_provider_devices::float); v_recovery_pct := 100.0 - (v_massive_threshold * 100.0); ELSE v_massive_threshold := 0; v_recovery_pct := 100; END IF;\r\n        \r\n        IF v_massive_threshold >= 0.15 OR v_es_masiva_tienda = true THEN\r\n            v_is_massive_context := true; \r\n            IF v_massive_threshold >= 0.15 THEN\r\n                IF v_massive_id IS NULL THEN\r\n                    INSERT INTO public.massive_incidents_jj (provider_name, country, total_provider_inventory, total_affected_initial, current_active_count, recovery_percentage, status, start_time) VALUES (v_provider_affected_name, v_pais, v_total_provider_devices, v_total_provider_failures, v_total_provider_failures, 0, 'Activa', NOW()) RETURNING id, start_time INTO v_massive_id, v_massive_start; v_massive_ts := NULL; v_massive_status := 'Activa'; v_massive_logs := '[]'::jsonb;\r\n                ELSE \r\n                    IF v_total_provider_failures > 0 THEN UPDATE public.massive_incidents_jj SET current_active_count = v_total_provider_failures, total_affected_initial = GREATEST(total_affected_initial, v_total_provider_failures), recovery_percentage = v_recovery_pct, status = 'Activa', updated_at = NOW(), msg_close_sent_at = NULL WHERE id = v_massive_id; v_massive_status := 'Activa'; END IF;\r\n                END IF;\r\n            END IF;\r\n        END IF;\r\n    END IF;\r\n\r\n    -- ==============================================================================\r\n    -- 3. ACTUALIZACIÓN INDIVIDUAL\r\n    -- ==============================================================================\r\n    IF v_fail_id IS NULL THEN\r\n        IF v_new_impact != 'OK' THEN\r\n            INSERT INTO public.network_failures_jj (network_id, lifecycle_stage, site_impact, wan1_status, wan2_status, start_time, logs, analyst_notes, relapse_count, wan1_downtime_minutes, wan2_downtime_minutes, total_downtime_minutes, wan1_start_time, wan2_start_time, es_falla_masiva, wan1_massive_incident_id, wan2_massive_incident_id) \r\n            VALUES (p_network_id, 'Activa', v_new_impact, CASE WHEN v_w1_down THEN 'DOWN' ELSE 'UP' END, CASE WHEN v_w2_down THEN 'DOWN' ELSE 'UP' END, NOW(), p_wan1_log || p_wan2_log, '[]'::jsonb, 0, CASE WHEN v_w1_down THEN 1 ELSE 0 END, CASE WHEN v_w2_down THEN 1 ELSE 0 END, CASE WHEN v_new_impact='TOTAL' THEN 1 ELSE 0 END, CASE WHEN v_w1_down THEN NOW() ELSE NULL END, CASE WHEN v_w2_down THEN NOW() ELSE NULL END, v_is_massive_context, \r\n            CASE WHEN v_w1_down AND v_is_massive_context AND v_wan1_prov_id = v_provider_affected_id THEN v_massive_id ELSE NULL END, \r\n            CASE WHEN v_w2_down AND v_is_massive_context AND v_wan2_prov_id = v_provider_affected_id THEN v_massive_id ELSE NULL END) \r\n            RETURNING id INTO v_fail_id;\r\n        END IF;\r\n    ELSE \r\n        UPDATE public.network_failures_jj \r\n        SET last_detected_at = NOW(), site_impact = CASE WHEN v_new_impact != 'OK' THEN v_new_impact ELSE site_impact END, wan1_status = CASE WHEN v_w1_down THEN 'DOWN' ELSE 'UP' END, wan2_status = CASE WHEN v_w2_down THEN 'DOWN' ELSE 'UP' END, wan1_downtime_minutes = wan1_downtime_minutes + CASE WHEN v_w1_down THEN 1 ELSE 0 END, wan2_downtime_minutes = wan2_downtime_minutes + CASE WHEN v_w2_down THEN 1 ELSE 0 END, total_downtime_minutes = total_downtime_minutes + CASE WHEN v_new_impact = 'TOTAL' THEN 1 ELSE 0 END, wan1_start_time = CASE WHEN v_w1_down AND wan1_status = 'UP' THEN NOW() WHEN v_w1_down AND wan1_start_time IS NULL THEN NOW() ELSE wan1_start_time END, wan1_recovery_start_time = CASE WHEN NOT v_w1_down AND wan1_status = 'DOWN' THEN NOW() WHEN v_w1_down THEN NULL ELSE wan1_recovery_start_time END, wan2_start_time = CASE WHEN v_w2_down AND wan2_status = 'UP' THEN NOW() WHEN v_w2_down AND wan2_start_time IS NULL THEN NOW() ELSE wan2_start_time END, wan2_recovery_start_time = CASE WHEN NOT v_w2_down AND wan2_status = 'DOWN' THEN NOW() WHEN v_w2_down THEN NULL ELSE wan2_recovery_start_time END, es_falla_masiva = CASE WHEN v_is_massive_context THEN true ELSE es_falla_masiva END, \r\n        wan1_massive_incident_id = CASE WHEN v_w1_down AND v_is_massive_context AND v_wan1_prov_id = v_provider_affected_id THEN v_massive_id ELSE wan1_massive_incident_id END, \r\n        wan2_massive_incident_id = CASE WHEN v_w2_down AND v_is_massive_context AND v_wan2_prov_id = v_provider_affected_id THEN v_massive_id ELSE wan2_massive_incident_id END \r\n        WHERE id = v_fail_id;\r\n    END IF;\r\n\r\n    -- ==============================================================================\r\n    -- 4. LÓGICA MASIVA (IDEMPOTENCIA Y CASCADA SILENCIOSA)\r\n    -- ==============================================================================\r\n    IF v_is_massive_context = true THEN\r\n        IF v_new_impact = 'OK' THEN\r\n            IF v_old_stage = 'Activa' THEN\r\n                UPDATE public.network_failures_jj SET lifecycle_stage = 'Falso Positivo', status = 'Falso Positivo', closed_at = NOW() WHERE id = v_fail_id;\r\n            ELSIF v_old_stage IN ('En gestión', 'Intermitencia') THEN\r\n                v_log_msg := 'Enlace en la ' || v_wan_recuperada_texto || ' restablecido, el caso pasa a \"En observación\" por 60 minutos.';\r\n                UPDATE public.network_failures_jj SET lifecycle_stage = 'En observación', recovery_start_time = NOW(), analyst_notes = COALESCE(analyst_notes, '[]'::jsonb) || jsonb_build_array(jsonb_build_object('log', to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : ' || v_log_msg)) WHERE id = v_fail_id;\r\n                \r\n                SELECT total_affected_initial INTO v_massive_initial FROM public.massive_incidents_jj WHERE id = COALESCE(v_massive_id, v_store_massive_id);\r\n                IF v_massive_initial > 0 THEN v_relative_recov_pct := ((v_massive_initial - v_total_provider_failures)::float / v_massive_initial::float) * 100.0; ELSE v_relative_recov_pct := 100.0; END IF;\r\n                \r\n                v_log_msg := '✅ ' || v_store_name || ' recuperada. Progreso de la crisis: ' || round(v_relative_recov_pct::numeric, 0) || '% (' || (v_massive_initial - v_total_provider_failures) || '/' || v_massive_initial || ' tiendas).';\r\n                \r\n                IF NOT v_massive_logs @> jsonb_build_array(jsonb_build_object('log', to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : ' || v_log_msg)) THEN\r\n                    UPDATE public.massive_incidents_jj SET logs = COALESCE(logs, '[]'::jsonb) || jsonb_build_array(jsonb_build_object('log', to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : ' || v_log_msg)) WHERE id = COALESCE(v_massive_id, v_store_massive_id);\r\n                END IF;\r\n            ELSIF v_old_stage = 'En observación' AND (NOW() - v_old_recov_start) > INTERVAL '60 minutes' THEN\r\n                v_log_msg := 'Recuperación confirmada, estable por > 60 min. Pasa a \"Pendiente por cierre\".';\r\n                UPDATE public.network_failures_jj SET lifecycle_stage = 'Pendiente por cierre' WHERE id = v_fail_id;\r\n            END IF;\r\n        END IF;\r\n\r\n        IF v_massive_status = 'Activa' AND v_massive_threshold >= 0.15 AND v_massive_ts IS NULL AND (NOW() - v_massive_start) > INTERVAL '5 minutes' THEN \r\n             SELECT value INTO v_provider_support_email FROM public.isp_contacts_jj WHERE provider_id = v_provider_affected_id AND level = 'Nivel 1' AND method = 'Correo' AND value IS NOT NULL LIMIT 1;\r\n             SELECT jsonb_agg(jsonb_build_object('tienda', i.nombre_tienda, 'circuito', CASE WHEN i.wan1_provider_id = v_provider_affected_id THEN i.wan1_id_servicio ELSE i.wan2_id_servicio END, 'ip_pub', CASE WHEN i.wan1_provider_id = v_provider_affected_id THEN i.wan1_ip_publica ELSE i.wan2_ip_publica END, 'ip_wan', CASE WHEN i.wan1_provider_id = v_provider_affected_id THEN i.wan1_ip_wan ELSE i.wan2_ip_wan END, 'gateway', CASE WHEN i.wan1_provider_id = v_provider_affected_id THEN i.wan1_gateway ELSE i.wan2_gateway END, 'direccion', i.direccion_domicilio)), COUNT(*) FILTER (WHERE f.site_impact = 'TOTAL'), COUNT(*) FILTER (WHERE f.site_impact = 'PARCIAL'), string_agg('• ' || i.nombre_tienda || ' | WAN1 [' || COALESCE(p1.name, 'N/A') || '] - ' || f.wan1_status || ' | WAN2 [' || COALESCE(p2.name, 'N/A') || '] - ' || f.wan2_status, E'\\n') INTO v_affected_stores_json, v_count_total_impact, v_count_partial_impact, v_stores_text_list FROM public.network_failures_jj f JOIN public.devices_inventory_jj i ON f.network_id = i.network_id LEFT JOIN public.isp_providers_jj p1 ON i.wan1_provider_id = p1.id LEFT JOIN public.isp_providers_jj p2 ON i.wan2_provider_id = p2.id WHERE f.lifecycle_stage IN ('Activa', 'En gestión') AND i.pais = v_pais AND ((f.wan1_status = 'DOWN' AND i.wan1_provider_id = v_provider_affected_id) OR (f.wan2_status = 'DOWN' AND i.wan2_provider_id = v_provider_affected_id));\r\n             v_massive_log_text := '📋 CHECKLIST DE AFECTACIÓN MASIVA' || E'\\n===================================\\n• Proveedor Afectado: ' || v_provider_affected_name || E'\\n• Inventario Total: ' || v_total_provider_devices || E'\\n• Tiendas Caídas: ' || v_total_provider_failures || E'\\n• Porcentaje: ' || round((v_massive_threshold * 100)::numeric, 2) || '%' || E'\\n• Totales: ' || COALESCE(v_count_total_impact, 0) || E'\\n• Parciales: ' || COALESCE(v_count_partial_impact, 0) || E'\\n\\n🏢 ESTADOS:\\n' || COALESCE(v_stores_text_list, 'Sin tiendas');\r\n             \r\n             IF NOT v_massive_logs::text LIKE '%' || 'CHECKLIST DE AFECTACIÓN MASIVA' || '%' THEN\r\n                 UPDATE public.massive_incidents_jj SET logs = COALESCE(logs, '[]'::jsonb) || jsonb_build_array(jsonb_build_object('log', to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || E'\\n' || v_massive_log_text)) WHERE id = v_massive_id;\r\n             END IF;\r\n\r\n             RETURN jsonb_build_object('action', 'TRIGGER_MASSIVE_PROTOCOL', 'channel', c_channel_incidencias, 'pais', v_pais, 'proveedor', v_provider_affected_name, 'massive_id', v_massive_id, 'email_soporte', COALESCE(v_provider_support_email, 'N/A'), 'email_bmc', COALESCE(v_correo_tienda, 'cemo@farmatodo.com'), 'tiendas_data', COALESCE(v_affected_stores_json, '[]'::jsonb), 'total_afectadas', v_total_provider_failures, 'porcentaje', round((v_massive_threshold * 100)::numeric, 2)); \r\n        END IF;\r\n\r\n        IF v_massive_status = 'Activa' AND v_massive_threshold >= 0.15 AND v_massive_ts IS NOT NULL THEN\r\n             IF (v_last_recovery_pct < 25 AND v_recovery_pct >= 25) OR (v_last_recovery_pct < 50 AND v_recovery_pct >= 50) OR (v_last_recovery_pct < 75 AND v_recovery_pct >= 75) THEN \r\n                  RETURN jsonb_build_object('action', 'TRIGGER_MASSIVE_UPDATE', 'channel', c_channel_incidencias, 'slack_ts', v_massive_ts, 'proveedor', v_provider_affected_name, 'recovery_pct', round(v_recovery_pct::numeric, 0), 'tiendas_restantes', v_total_provider_failures); \r\n             END IF; \r\n        END IF;\r\n\r\n        IF v_massive_id IS NOT NULL AND v_massive_threshold < 0.05 AND v_total_provider_failures > 0 THEN\r\n            IF v_massive_status = 'Activa' THEN\r\n                v_massive_log_text := '🟢 Afectación global < 5%. La Masiva pasa a estado \"En observación\". - Nexus';\r\n                IF NOT v_massive_logs @> jsonb_build_array(jsonb_build_object('log', to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : ' || v_massive_log_text)) THEN\r\n                    UPDATE public.massive_incidents_jj SET status = 'En observación', current_active_count = v_total_provider_failures, recovery_percentage = v_recovery_pct, updated_at = NOW(), logs = COALESCE(logs, '[]'::jsonb) || jsonb_build_array(jsonb_build_object('log', to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : ' || v_massive_log_text)) WHERE id = v_massive_id;\r\n                END IF;\r\n                IF v_massive_ts IS NOT NULL THEN RETURN jsonb_build_object('action', 'TRIGGER_MASSIVE_OBSERVATION', 'channel', c_channel_incidencias, 'slack_ts', v_massive_ts, 'proveedor', v_provider_affected_name, 'pais', v_pais, 'tiendas_restantes', v_total_provider_failures); END IF;\r\n            END IF;\r\n        END IF;\r\n\r\n        IF v_massive_id IS NOT NULL AND v_total_provider_failures = 0 THEN\r\n            IF v_massive_status IN ('Activa', 'En observación') OR (v_massive_status = 'Pendiente por cierre' AND v_massive_msg_close_at IS NULL) THEN\r\n                \r\n                IF v_massive_status IN ('Activa', 'En observación') THEN\r\n                    v_massive_log_text := '✅ 100% de tiendas restablecidas. La Masiva pasa a \"Pendiente por cierre\". - Nexus';\r\n                    IF NOT v_massive_logs @> jsonb_build_array(jsonb_build_object('log', to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : ' || v_massive_log_text)) THEN\r\n                        -- Actualizamos la masiva\r\n                        UPDATE public.massive_incidents_jj SET status = 'Pendiente por cierre', current_active_count = 0, recovery_percentage = 100, recovery_status = 'Recuperada', recovery_start_time = NOW(), updated_at = NOW(), logs = COALESCE(logs, '[]'::jsonb) || jsonb_build_array(jsonb_build_object('log', to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : ' || v_massive_log_text)) WHERE id = v_massive_id;\r\n                        \r\n                        -- CASCADA DE CIERRE (Mueve Hijos a Pendiente por Cierre y los silencia)\r\n                        UPDATE public.network_failures_jj \r\n                        SET lifecycle_stage = 'Pendiente por cierre',\r\n                            is_flapping = false,\r\n                            msg_close_sent_at = NOW() -- 🛡️ SILENCIADOR: Evita que n8n inunde Slack con mensajes individuales\r\n                        WHERE (wan1_massive_incident_id = v_massive_id OR wan2_massive_incident_id = v_massive_id) \r\n                        AND lifecycle_stage NOT IN ('Pendiente por cierre', 'Resuelta', 'Falso Positivo');\r\n\r\n                        -- 🛡️ NUEVO: CASCADA DE CIERRE A DEGRADACIONES HIJAS\r\n                        UPDATE public.network_degradations_jj \r\n                        SET status = 'Pendiente por cierre', msg_close_sent_at = NOW() \r\n                        WHERE related_massive_id = v_massive_id \r\n                        AND status NOT IN ('Pendiente por cierre', 'Resuelta', 'Falso Positivo');\r\n                    END IF;\r\n                END IF;\r\n\r\n                IF v_massive_ts IS NOT NULL THEN \r\n                    RETURN jsonb_build_object('action', 'TRIGGER_MASSIVE_PENDING_CLOSE', 'channel', c_channel_incidencias, 'slack_ts', v_massive_ts, 'proveedor', v_provider_affected_name, 'pais', v_pais, 'massive_id', v_massive_id); \r\n                END IF;\r\n            END IF;\r\n        END IF;\r\n        RETURN jsonb_build_object('action', 'NONE', 'msg', 'Silenced by Massive Incident');\r\n    END IF;\r\n\r\n    -- ==============================================================================\r\n    -- 5. LÓGICA INDIVIDUAL\r\n    -- ==============================================================================\r\n    IF v_new_impact = 'OK' AND v_old_stage = 'Activa' THEN \r\n        v_log_msg := 'Falla revertida antes de 5 minutos. Caso cerrado como Falso Positivo. - Nexus';\r\n        UPDATE public.network_failures_jj SET lifecycle_stage = 'Falso Positivo', status = 'Falso Positivo', closed_at = NOW(), analyst_notes = COALESCE(analyst_notes, '[]'::jsonb) || jsonb_build_array(jsonb_build_object('log', to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : ' || v_log_msg)) WHERE id = v_fail_id; \r\n        RETURN jsonb_build_object('action', 'NONE'); \r\n    END IF;\r\n\r\n    IF v_old_stage = 'Intermitencia' OR (v_old_stage = 'Pendiente por cierre' AND v_is_flapping = true) THEN\r\n        IF v_new_impact != 'OK' THEN \r\n            IF v_old_recov_start IS NOT NULL THEN UPDATE public.network_failures_jj SET recovery_start_time = NULL WHERE id = v_fail_id; END IF;\r\n            RETURN jsonb_build_object('action', 'NONE', 'msg', 'Still Flapping');\r\n        ELSE \r\n            IF v_old_recov_start IS NULL THEN\r\n                UPDATE public.network_failures_jj SET recovery_start_time = NOW() WHERE id = v_fail_id;\r\n                RETURN jsonb_build_object('action', 'NONE', 'msg', 'Flapping stopped');\r\n            ELSE\r\n                IF ((NOW() - v_old_recov_start) > INTERVAL '60 minutes') AND v_msg_close_at IS NULL THEN \r\n                    v_log_msg := 'El enlace en la ' || v_wan_recuperada_texto || ' superó la inestabilidad por 60 min. Pasa a \"Pendiente por cierre\". - Nexus';\r\n                    UPDATE public.network_failures_jj SET lifecycle_stage = 'Pendiente por cierre', analyst_notes = COALESCE(analyst_notes, '[]'::jsonb) || jsonb_build_array(jsonb_build_object('log', to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : ' || v_log_msg)) WHERE id = v_fail_id AND lifecycle_stage != 'Pendiente por cierre'; \r\n                    RETURN jsonb_build_object('action', 'SEND_FLAPPING_RECOVERY', 'slack_ts', v_old_ts, 'channel', c_channel_incidencias, 'store_name', v_store_name, 'fail_ids', jsonb_build_array(v_fail_id)); \r\n                END IF;\r\n            END IF;\r\n            RETURN jsonb_build_object('action', 'NONE');\r\n        END IF;\r\n    END IF;\r\n\r\n    IF v_new_impact = 'OK' THEN \r\n        IF v_old_stage = 'En gestión' OR (v_old_stage = 'En observación' AND v_msg_recovery_at IS NULL AND v_is_flapping = false) THEN \r\n            v_log_msg := 'Enlace en la ' || v_wan_recuperada_texto || ' restablecido, pasa a \"En observación\" por 60 min. - Nexus';\r\n            IF v_old_stage = 'En gestión' THEN UPDATE public.network_failures_jj SET lifecycle_stage = 'En observación', recovery_start_time = NOW(), analyst_notes = COALESCE(analyst_notes, '[]'::jsonb) || jsonb_build_array(jsonb_build_object('log', to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : ' || v_log_msg)) WHERE id = v_fail_id; END IF;\r\n            SELECT wan1_recovery_start_time, wan2_recovery_start_time, wan1_downtime_minutes, wan2_downtime_minutes INTO v_out_w1_recov, v_out_w2_recov, v_out_w1_min, v_out_w2_min FROM public.network_failures_jj WHERE id = v_fail_id;\r\n            RETURN jsonb_build_object('action', 'SEND_RECOVERY', 'slack_ts', v_old_ts, 'channel', v_target_channel, 'store_name', v_store_name, 'prov1_name', v_prov1_name, 'prov2_name', v_prov2_name, 'fail_ids', jsonb_build_array(v_fail_id), 'w1_recov_time', v_out_w1_recov, 'w1_dur', v_out_w1_min, 'w2_recov_time', v_out_w2_recov, 'w2_dur', v_out_w2_min);\r\n        END IF;\r\n\r\n        IF v_old_recov_start IS NOT NULL THEN\r\n            IF ((NOW() - v_old_recov_start) > INTERVAL '60 minutes') AND v_msg_close_at IS NULL AND v_is_flapping = false THEN \r\n                v_log_msg := 'Recuperación confirmada, estable por > 60 min. Pasa a \"Pendiente por cierre\". - Nexus';\r\n                IF v_old_stage = 'En observación' THEN UPDATE public.network_failures_jj SET lifecycle_stage = 'Pendiente por cierre', analyst_notes = COALESCE(analyst_notes, '[]'::jsonb) || jsonb_build_array(jsonb_build_object('log', to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : ' || v_log_msg)) WHERE id = v_fail_id; END IF;\r\n                RETURN jsonb_build_object('action', 'SEND_CLOSE', 'slack_ts', v_old_ts, 'channel', v_target_channel, 'store_name', v_store_name, 'fail_ids', jsonb_build_array(v_fail_id)); \r\n            END IF;\r\n        END IF;\r\n        RETURN jsonb_build_object('action', 'NONE');\r\n    END IF;\r\n\r\n    IF v_new_impact != 'OK' AND v_old_stage = 'En observación' THEN\r\n        v_relapse_count := COALESCE(v_relapse_count, 0) + 1;\r\n        IF v_relapse_count >= 3 THEN \r\n            v_log_msg := 'Se han registrado 3 o mas recaídas consecutivas. Regresa a \"Intermitencia\". - Nexus';\r\n            UPDATE public.network_failures_jj SET lifecycle_stage = 'Intermitencia', is_flapping = true, relapse_count = v_relapse_count, recovery_start_time = NULL, analyst_notes = COALESCE(analyst_notes, '[]'::jsonb) || jsonb_build_array(jsonb_build_object('log', to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : ' || v_log_msg)) WHERE id = v_fail_id; \r\n            RETURN jsonb_build_object('action', 'SEND_FLAPPING', 'slack_ts', v_old_ts, 'channel', c_channel_incidencias, 'store_name', v_store_name, 'fail_ids', jsonb_build_array(v_fail_id));\r\n        ELSE \r\n            v_log_msg := 'Recaída detectada en la ' || v_wan_afectada_texto || '. Regresa a \"En gestión\". - Nexus';\r\n            UPDATE public.network_failures_jj SET lifecycle_stage = 'En gestión', relapse_count = v_relapse_count, recovery_start_time = NULL, analyst_notes = COALESCE(analyst_notes, '[]'::jsonb) || jsonb_build_array(jsonb_build_object('log', to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : ' || v_log_msg)) WHERE id = v_fail_id; \r\n            RETURN jsonb_build_object('action', 'SEND_RELAPSE', 'slack_ts', v_old_ts, 'channel', v_target_channel, 'store_name', v_store_name, 'fail_ids', jsonb_build_array(v_fail_id), 'prov1_name', v_prov1_name, 'prov2_name', v_prov2_name, 'w1_down', v_w1_down, 'w2_down', v_w2_down); \r\n        END IF;\r\n    END IF;\r\n\r\n    IF v_old_impact = 'PARCIAL' AND v_new_impact = 'TOTAL' AND v_old_stage = 'En gestión' THEN \r\n        v_log_msg := 'Caída en la otra ' || v_wan_afectada_texto || ' disponible. Falla \"Parcial\" a \"Total\". - Nexus';\r\n        UPDATE public.network_failures_jj SET analyst_notes = COALESCE(analyst_notes, '[]'::jsonb) || jsonb_build_array(jsonb_build_object('log', to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : ' || v_log_msg)) WHERE id = v_fail_id;\r\n        RETURN jsonb_build_object('action', 'SEND_ESCALATION', 'slack_ts', v_old_ts, 'channel', c_channel_incidencias, 'store_name', v_store_name, 'fail_ids', jsonb_build_array(v_fail_id)); \r\n    END IF;\r\n\r\n    IF v_new_impact != 'OK' THEN\r\n        IF (v_old_stage = 'Activa' AND (NOW() - v_start_time) > INTERVAL '5 minutes') OR (v_old_stage = 'En gestión' AND v_old_ts IS NULL) THEN\r\n            v_log_msg := 'Falla ' || lower(v_new_impact) || ' confirmada en la ' || v_wan_afectada_texto || '. Pasa a \"En gestión\". - Nexus';\r\n            IF v_old_stage = 'Activa' THEN UPDATE public.network_failures_jj SET lifecycle_stage = 'En gestión', analyst_notes = COALESCE(analyst_notes, '[]'::jsonb) || jsonb_build_array(jsonb_build_object('log', to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : ' || v_log_msg), jsonb_build_object('log', to_char(NOW() AT TIME ZONE 'America/Caracas', 'DD/MM/YYYY HH24:MI:SS') || ' : ' || v_log_contactos_full)) WHERE id = v_fail_id; END IF;\r\n            RETURN jsonb_build_object('action', 'TRIGGER_PROTOCOL', 'store_name', v_store_name, 'store_code', v_codigo_tienda, 'meraki_url', v_meraki_url, 'pais', v_pais, 'impact', v_new_impact, 'channel', v_target_channel, 'fail_ids', jsonb_build_array(v_fail_id), 'prov1_name', v_prov1_name, 'prov2_name', v_prov2_name, 'w1_down', v_w1_down, 'w2_down', v_w2_down, 'store_address', v_direccion_domicilio, 'store_email', v_correo_tienda, 'wan1_circuit_id', v_w1_id_servicio, 'wan1_ip_pub', v_w1_ip_publica, 'wan1_gateway', v_w1_gateway, 'wan1_support_email', v_w1_email_soporte, 'wan1_contact_summary', v_w1_contacto_resumen, 'wan2_circuit_id', v_w2_id_servicio, 'wan2_ip_pub', v_w2_ip_publica, 'wan2_gateway', v_w2_gateway, 'wan2_support_email', v_w2_email_soporte, 'wan2_contact_summary', v_w2_contacto_resumen);\r\n        END IF;\r\n    END IF;\r\n\r\n    RETURN jsonb_build_object('action', 'NONE');\r\nEND;\r\n$function$\n"
+    },
+    {
+      "function_name": "process_incident_logic_jj",
+      "function_def": "CREATE OR REPLACE FUNCTION public.process_incident_logic_jj()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n    -- A. Lógica para Fallas Totales/Parciales\r\n    IF TG_TABLE_NAME = 'network_failures_jj' THEN\r\n        IF NEW.recovery_start_time IS NOT NULL AND NEW.start_time IS NOT NULL THEN\r\n             NEW.duration_minutes := EXTRACT(EPOCH FROM (NEW.recovery_start_time - NEW.start_time)) / 60;\r\n        END IF;\r\n        IF NEW.closed_at IS NOT NULL THEN\r\n            NEW.lifecycle_stage := 'Resuelta';\r\n            NEW.status := 'Resuelta'; \r\n        END IF;\r\n        RETURN NEW;\r\n\r\n    -- B. Lógica para Fallas Masivas\r\n    ELSIF TG_TABLE_NAME = 'massive_incidents_jj' THEN\r\n        IF NEW.end_time IS NOT NULL THEN\r\n            NEW.status := 'Resuelta';\r\n            NEW.recovery_status := 'Finalizada';\r\n        END IF;\r\n        RETURN NEW;\r\n\r\n    -- 🛡️ C. NUEVO: Lógica para Degradaciones (IA)\r\n    ELSIF TG_TABLE_NAME = 'network_degradations_jj' THEN\r\n        -- Calcular la duración exacta de la latencia/pérdida\r\n        IF NEW.recovery_start_time IS NOT NULL AND NEW.created_at IS NOT NULL THEN\r\n             NEW.duration_minutes := EXTRACT(EPOCH FROM (NEW.recovery_start_time - NEW.created_at)) / 60;\r\n        END IF;\r\n        -- Forzar el estado si el FrontEnd lo cierra\r\n        IF NEW.closed_at IS NOT NULL THEN\r\n            NEW.status := 'Resuelta';\r\n        END IF;\r\n        RETURN NEW;\r\n    END IF;\r\n\r\n    RETURN NEW;\r\nEND;\r\n$function$\n"
+    },
+    {
+      "function_name": "register_sentinel_diagnosis_jj",
+      "function_def": "CREATE OR REPLACE FUNCTION public.register_sentinel_diagnosis_jj(p_network_id text, p_diagnosis_text text, p_evidence_data jsonb)\n RETURNS jsonb\n LANGUAGE plpgsql\nAS $function$\r\nDECLARE\r\n    v_failure_id bigint;\r\n    v_degrad_id bigint;\r\n    v_current_status text;\r\n    v_action text;\r\nBEGIN\r\n    -- 1. Buscar si hay una Falla Crítica\r\n    SELECT id INTO v_failure_id\r\n    FROM public.network_failures_jj\r\n    WHERE network_id = p_network_id\r\n      AND lifecycle_stage IN ('Activa', 'En gestión', 'En observación', 'Intermitencia')\r\n    ORDER BY created_at DESC LIMIT 1;\r\n\r\n    -- 2. Buscar si ya hay una Degradación viva\r\n    SELECT id, status INTO v_degrad_id, v_current_status\r\n    FROM public.network_degradations_jj\r\n    WHERE network_id = p_network_id\r\n      AND status IN ('Activa', 'En gestión', 'En observación')\r\n    ORDER BY created_at DESC LIMIT 1;\r\n\r\n    -- 3. Lógica de Decisión\r\n    IF v_failure_id IS NOT NULL THEN\r\n        -- Ya está caída (Roja/Naranja). Guardamos la degradación silenciosamente y vinculamos.\r\n        IF v_degrad_id IS NULL THEN\r\n            INSERT INTO public.network_degradations_jj (network_id, status, diagnosis_text, evidence_data, related_failure_id, updated_at, updated_by)\r\n            VALUES (p_network_id, 'Activa', p_diagnosis_text, p_evidence_data, v_failure_id, NOW(), 'Nexus');\r\n        ELSE\r\n            UPDATE public.network_degradations_jj\r\n            SET diagnosis_text = p_diagnosis_text, evidence_data = p_evidence_data, related_failure_id = v_failure_id, updated_at = NOW(), updated_by = 'Nexus'\r\n            WHERE id = v_degrad_id;\r\n        END IF;\r\n\r\n        -- Inyectar nota en la falla principal (Solo 1 vez)\r\n        UPDATE public.network_failures_jj\r\n        SET analyst_notes = analyst_notes || jsonb_build_array(jsonb_build_object('role', 'Nexus', 'timestamp', to_char(NOW() AT TIME ZONE 'UTC', 'DD/MM/YYYY HH24:MI:SS'), 'message', '🤖 [DIAGNÓSTICO 360° PREVENTIVO] ' || p_diagnosis_text)),\r\n            sentinel_diagnosis_added = true\r\n        WHERE id = v_failure_id AND sentinel_diagnosis_added = false;\r\n\r\n        v_action := 'APPEND_TO_FAILURE';\r\n\r\n    ELSIF v_degrad_id IS NOT NULL THEN\r\n        -- Ya existía una degradación (Morada). Actualizamos la evidencia sin duplicar.\r\n        UPDATE public.network_degradations_jj\r\n        SET diagnosis_text = p_diagnosis_text, \r\n            evidence_data = p_evidence_data,\r\n            updated_at = NOW(), \r\n            updated_by = 'Nexus',\r\n            -- Si estaba en observación y recayó, la devolvemos a Activa\r\n            status = CASE WHEN status = 'En observación' THEN 'Activa' ELSE status END,\r\n            -- Borramos el reloj de recuperación porque recayó\r\n            recovery_start_time = CASE WHEN status = 'En observación' THEN NULL ELSE recovery_start_time END\r\n        WHERE id = v_degrad_id;\r\n\r\n        -- Lógica Anti-Spam: Si ya estaba Activa/En gestión, le decimos a n8n que guarde silencio.\r\n        IF v_current_status = 'En observación' THEN\r\n            v_action := 'RELAPSE_DEGRADATION'; -- Recayó, n8n podría avisar en el hilo de Slack\r\n        ELSE\r\n            v_action := 'SILENT_UPDATE'; -- Ya se había avisado, no hacer nada en Slack\r\n        END IF;\r\n\r\n    ELSE\r\n        -- Es una degradación totalmente nueva\r\n        INSERT INTO public.network_degradations_jj (network_id, status, diagnosis_text, evidence_data, updated_at, updated_by)\r\n        VALUES (p_network_id, 'Activa', p_diagnosis_text, p_evidence_data, NOW(), 'Nexus');\r\n\r\n        v_action := 'REGISTER_DEGRADATION';\r\n    END IF;\r\n\r\n    RETURN jsonb_build_object('action', v_action, 'related_failure_id', v_failure_id);\r\nEND;\r\n$function$\n"
+    },
+    {
+      "function_name": "process_degradations_recovery_jj",
+      "function_def": "CREATE OR REPLACE FUNCTION public.process_degradations_recovery_jj(p_online_networks jsonb)\n RETURNS jsonb\n LANGUAGE plpgsql\nAS $function$\r\nDECLARE\r\n    v_recovered_count int := 0;\r\n    v_closed_count int := 0;\r\nBEGIN\r\n    -- 1. Pasar a \"En observación\" (Sanación inicial)\r\n    -- Usamos una subconsulta con el JSON para actualizar masivamente\r\n    WITH online_nets AS (\r\n        SELECT jsonb_array_elements_text(p_online_networks) AS network_id\r\n    ),\r\n    updated_obs AS (\r\n        UPDATE public.network_degradations_jj nd\r\n        SET status = 'En observación',\r\n            recovery_start_time = NOW(),\r\n            updated_at = NOW(),\r\n            updated_by = 'Nexus'\r\n        FROM online_nets onet\r\n        WHERE nd.network_id = onet.network_id\r\n          AND nd.status IN ('Activa', 'En gestión')\r\n        RETURNING nd.id\r\n    )\r\n    SELECT count(*) INTO v_recovered_count FROM updated_obs;\r\n\r\n    -- 2. Pasar a \"Pendiente por cierre\" (Cuarentena superada > 60 min)\r\n    WITH updated_closed AS (\r\n        UPDATE public.network_degradations_jj\r\n        SET status = 'Pendiente por cierre',\r\n            updated_at = NOW(),\r\n            updated_by = 'Nexus'\r\n        WHERE status = 'En observación'\r\n          AND recovery_start_time <= NOW() - INTERVAL '60 minutes'\r\n        RETURNING id\r\n    )\r\n    SELECT count(*) INTO v_closed_count FROM updated_closed;\r\n\r\n    RETURN jsonb_build_object(\r\n        'recovered_to_observation', v_recovered_count,\r\n        'moved_to_pending_close', v_closed_count\r\n    );\r\nEND;\r\n$function$\n"
+    }
+  ],
+  "triggers": [
+    {
+      "table_name": "network_failures_jj",
+      "trigger_name": "trg_logic_individual",
+      "event": "INSERT",
+      "timing": "BEFORE",
+      "definition": "EXECUTE FUNCTION process_incident_logic_jj()"
+    },
+    {
+      "table_name": "network_failures_jj",
+      "trigger_name": "trg_logic_individual",
+      "event": "UPDATE",
+      "timing": "BEFORE",
+      "definition": "EXECUTE FUNCTION process_incident_logic_jj()"
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "trigger_name": "trg_logic_massive",
+      "event": "INSERT",
+      "timing": "BEFORE",
+      "definition": "EXECUTE FUNCTION process_incident_logic_jj()"
+    },
+    {
+      "table_name": "massive_incidents_jj",
+      "trigger_name": "trg_logic_massive",
+      "event": "UPDATE",
+      "timing": "BEFORE",
+      "definition": "EXECUTE FUNCTION process_incident_logic_jj()"
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "trigger_name": "trg_logic_degradations",
+      "event": "INSERT",
+      "timing": "BEFORE",
+      "definition": "EXECUTE FUNCTION process_incident_logic_jj()"
+    },
+    {
+      "table_name": "network_degradations_jj",
+      "trigger_name": "trg_logic_degradations",
+      "event": "UPDATE",
+      "timing": "BEFORE",
+      "definition": "EXECUTE FUNCTION process_incident_logic_jj()"
+    }
+  ],
+  "views": []
+}
