@@ -106,15 +106,28 @@ export interface MassiveIncident {
   slack_thread_ts?: string; // Not null triggers icon
 }
 
+export interface ISPContact {
+  id?: number | string;
+  provider_id: number | string;
+  level: 'Nivel 1' | 'Nivel 2' | 'Nivel 3' | 'Nivel 4' | 'Nivel 5' | string;
+  method: 'Correo' | 'Llamada' | 'Whatsapp' | string;
+  value: string;
+  contact_name: string;
+  last_seen_api?: string;
+  created_at?: string;
+}
+
 export interface ISPProvider {
   id: number | string;
   name: string;
+  country?: string; // NEW FIELD
   // Extended fields for the Providers Module
-  contact_name?: string;
-  contact_email?: string;
-  support_phone?: string;
+  contact_name?: string; // (Deprecated flat field)
+  contact_email?: string; // (Deprecated flat field)
+  support_phone?: string; // (Deprecated flat field)
   sla_contract?: number; // e.g., 99.5
   website_url?: string;
+  contacts?: ISPContact[]; // NEW: Related contacts from isp_contacts_jj
 }
 
 export interface ScheduledTask {
@@ -147,6 +160,7 @@ export interface DeviceInventory {
   // WAN 1
   wan1_provider_id: string | number; // FK
   wan1_id_servicio: string;
+  wan1_tipo_servicio?: string; // NEW FIELD
   wan1_provider?: ISPProvider; // Joined data
   wan1_bw?: string; // Bandwidth (e.g., "50 MB")
   wan1_contingencia?: boolean; // Is contingency link?
@@ -154,6 +168,7 @@ export interface DeviceInventory {
   // WAN 2
   wan2_provider_id: string | number; // FK
   wan2_id_servicio: string;
+  wan2_tipo_servicio?: string; // NEW FIELD
   wan2_provider?: ISPProvider; // Joined data
   wan2_bw?: string; // Bandwidth (e.g., "10 MB")
   wan2_contingencia?: boolean; // Is contingency link?
