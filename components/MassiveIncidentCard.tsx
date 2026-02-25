@@ -164,8 +164,8 @@ const MassiveIncidentCard: React.FC<MassiveIncidentCardProps> = ({ incident, aff
 
                         {/* Status Badge Button */}
                         <div className="flex items-center">
-                            <div className="px-4 py-1.5 rounded-md border border-white/30 bg-white/20 backdrop-blur-md shadow-lg transition-transform hover:scale-105 active:scale-95">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-white shadow-sm">
+                            <div className="px-2.5 py-1.5 rounded-md border border-white/30 bg-white/20 backdrop-blur-md shadow-lg transition-transform hover:scale-105 active:scale-95 max-w-[120px] md:max-w-[140px]">
+                                <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-white shadow-sm block truncate text-center">
                                     {incident.status?.toUpperCase() || 'ACTIVA'}
                                 </span>
                             </div>
