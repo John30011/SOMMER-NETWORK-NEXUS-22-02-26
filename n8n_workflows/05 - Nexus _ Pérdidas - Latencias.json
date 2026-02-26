@@ -1,0 +1,807 @@
+{
+  "name": "05 - Nexus : Pérdidas - Latencias",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -6800,
+        4720
+      ],
+      "id": "a0cd69a3-6989-43ef-a5af-e4d74eb0fb61",
+      "name": "Cron: Cada 5 minutos"
+    },
+    {
+      "parameters": {
+        "url": "https://api.meraki.com/api/v1/organizations/1151666/devices/statuses",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ciscoMerakiApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -6576,
+        4720
+      ],
+      "id": "ff830c4c-fc45-4ed0-9a83-6fda38c76e5d",
+      "name": "Meraki: Obtener Estados",
+      "credentials": {
+        "ciscoMerakiApi": {
+          "id": "bMWpqlv7ApZ8gayT",
+          "name": "Cisco Meraki account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT public.nexus_degradation_triage_v3($1::jsonb) as resultado;",
+        "options": {
+          "queryReplacement": "={{ [ JSON.stringify($input.all().map(i => i.json)) ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -6352,
+        4720
+      ],
+      "id": "36bbf45d-6e3b-4322-9c7e-627a51d1a0e9",
+      "name": "Supabase: Pre-Triaje Maestro V3",
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "zv3CvTQjUWmJmOVa",
+          "name": "SOMMER NETWORK NEXUS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json.resultado;\nconst tasks = data.tasks_for_ai;\n\n// Si no hay tareas para la IA, terminamos en paz\nif (!tasks || tasks.length === 0) {\n    return [];\n}\n\n// Enviamos cada tienda a la línea de ensamblaje (Loop)\nreturn tasks.map(item => ({ json: item }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6128,
+        4720
+      ],
+      "id": "39c437ed-5d52-4328-a740-5131c8618b04",
+      "name": "Code: Extraer Tareas IA"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -5872,
+        4720
+      ],
+      "id": "d72e2b05-7aa5-4a36-be4c-5b3142f9d984",
+      "name": "Loop: Analisis Profundo"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.meraki.com/api/v1/organizations/1151666/devices/uplinksLossAndLatency?timespan=300&networkIds[]={{$json.device_info.networkId}}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ciscoMerakiApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -5616,
+        4736
+      ],
+      "id": "0e359424-67e3-486c-9d12-7d77daca747a",
+      "name": "360: Uplink Loss",
+      "executeOnce": true,
+      "credentials": {
+        "ciscoMerakiApi": {
+          "id": "bMWpqlv7ApZ8gayT",
+          "name": "Cisco Meraki account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "=https://api.meraki.com/api/v1/organizations/1151666/appliance/uplink/statuses?networkIds[]={{ $('Loop: Analisis Profundo').item.json.device_info.networkId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ciscoMerakiApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -5392,
+        4736
+      ],
+      "id": "22338ee1-4533-4349-a976-427a70f6f5d5",
+      "name": "360: Uplink Status",
+      "executeOnce": true,
+      "credentials": {
+        "ciscoMerakiApi": {
+          "id": "bMWpqlv7ApZ8gayT",
+          "name": "Cisco Meraki account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "=https://api.meraki.com/api/v1/organizations/1151666/appliance/vpn/statuses?networkIds[]={{ $('Loop: Analisis Profundo').item.json.device_info.networkId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ciscoMerakiApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -5168,
+        4736
+      ],
+      "id": "fea40364-ce88-490b-880b-899fa82a1603",
+      "name": "360: VPN Status",
+      "executeOnce": true,
+      "credentials": {
+        "ciscoMerakiApi": {
+          "id": "bMWpqlv7ApZ8gayT",
+          "name": "Cisco Meraki account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "=https://api.meraki.com/api/v1/networks/{{ $('Loop: Analisis Profundo').item.json.device_info.networkId }}/clients?timespan=300&perPage=5",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ciscoMerakiApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -4944,
+        4736
+      ],
+      "id": "56c9b882-da03-40a7-b26b-2e858af1cdfa",
+      "name": "360: Clients",
+      "executeOnce": true,
+      "credentials": {
+        "ciscoMerakiApi": {
+          "id": "bMWpqlv7ApZ8gayT",
+          "name": "Cisco Meraki account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const task = $('Loop: Analisis Profundo').item.json;\nconst lossData = $('360: Uplink Loss').item ? $('360: Uplink Loss').item.json : [];\nconst uplinkStatus = $('360: Uplink Status').item ? $('360: Uplink Status').item.json : [];\nconst vpnStatus = $('360: VPN Status').item ? $('360: VPN Status').item.json : [];\nconst clients = $('360: Clients').item ? $('360: Clients').item.json : [];\n\nreturn {\n  json: {\n    networkId: task.device_info.networkId,\n    store_name: task.device_info.name,\n    massive_id: task.massive_id,\n    failure_id: task.failure_id,\n    existing_degrad_id: task.existing_degrad_id,\n    analyst_notes: task.analyst_notes,\n    evidence: {\n        loss_latency_history: lossData,\n        uplink_status_now: uplinkStatus,\n        vpn_status_now: vpnStatus,\n        top_clients_usage: clients\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4736,
+        4736
+      ],
+      "id": "da8284a9-753d-4037-9717-ee5e20315692",
+      "name": "Code: Preparar Data IA",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.2-pro",
+          "mode": "list",
+          "cachedResultName": "GPT-5.2-PRO"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "=Eres \"Nexus\", Ingeniero Experto en SRE y Telecom de Farmatodo.\nTu objetivo es diagnosticar una tienda en estado \"Alerting\".\n\nRECIBIRÁS UN JSON CON:\n1. evidence: Evidencias técnicas (pérdidas, latencia, consumo, estatus de uplinks).\n2. analyst_notes: Notas previas de analistas humanos.\n\nTU TAREA:\n1. Analizar de forma INDIVIDUAL la Interfaz WAN1 y la WAN2 (revisa uplink_status_now y loss_latency_history).\n2. Leer \"analyst_notes\" para no repetir hipótesis descartadas.\n3. Determinar culpable: \"PROVEEDOR\" o \"INTERNO\". \n   - INTERNO: Causado por saturación de red local o clientes de alto consumo.\n   - PROVEEDOR: Latencias altas sin saturación local o VPN caída por internet inestable.\n\nRESPONDE ESTRICTAMENTE EN ESTE FORMATO JSON (Válido, sin markdown de bloque de código, solo el texto JSON puro):\n{\n  \"assigned_to\": \"PROVEEDOR\",\n  \"general_analysis\": \"✅ *VPN:* Conectado a DC Lumen\\n✅ *Consumo:* Normal (Cliente X 20MB)\",\n  \"wan1_analysis\": \"✅ *Estatus:* Online\\n✅ *Latencia:* 40ms\\n✅ *Pérdidas:* 0%\",\n  \"wan2_analysis\": \"❌ *Estatus:* Offline\\n➖ *Latencia:* N/A\\n⚠️ *Pérdidas:* 100%\",\n  \"diagnosis\": \"De acuerdo a los hallazgos encontrados...\",\n  \"recommendations\": \"1. Realice...\\n2. Configure...\"\n}"
+            },
+            {
+              "content": "=Analiza esta tienda: {{ $('Code: Preparar Data IA').item.json.store_name }}\n\nData JSON:\n{{ JSON.stringify({ evidence: $('Code: Preparar Data IA').item.json.evidence, analyst_notes: $('Code: Preparar Data IA').item.json.analyst_notes }) }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -4576,
+        4736
+      ],
+      "id": "c2d8ff8d-b726-431e-821a-f78d98dec307",
+      "name": "Agente IA: Nexus JSON",
+      "executeOnce": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "69XGlJLiLtjg8PBh",
+          "name": "OpenAi SOMMER NETWORK NEXUS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Extraemos la respuesta de la IA (soporta múltiples formatos de nodos OpenAI)\nlet content = $input.first().json.text || $input.first().json.message?.content || \"\";\nif ($input.first().json.output && $input.first().json.output[0] && $input.first().json.output[0].content) {\n   content = $input.first().json.output[0].content[0].text;\n}\n\n// 2. Limpiamos cualquier markdown accidental que envíe ChatGPT\ncontent = content.replace(/```json/g, '').replace(/```/g, '').trim();\n\n// 3. Convertimos el texto a un Objeto JSON real\nconst parsed = JSON.parse(content);\n\n// 4. Construimos el texto unificado para guardarlo ordenadamente en la Base de Datos (Supabase)\nconst full_text = `ℹ️ *Análisis general:*\\n${parsed.general_analysis}\\n\\n*Interfaz WAN1:*\\n${parsed.wan1_analysis}\\n\\n*Interfaz WAN2:*\\n${parsed.wan2_analysis}\\n\\n🔍 *Diagnóstico:*\\n${parsed.diagnosis}\\n\\n🛡️ *Recomendaciones:*\\n${parsed.recommendations}`;\n\n// 5. Retornamos todo empacado\nreturn { \n    json: { \n        ...$input.first().json, \n        ai_parsed: parsed, \n        full_diagnosis_text: full_text \n    } \n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4256,
+        4736
+      ],
+      "id": "4f43ae84-690c-4e43-b67e-fdeb5dbde204",
+      "name": "Code: Parsear JSON IA",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT public.register_ai_degradation_jj(\n    $1::text, \n    $2::bigint, \n    $3::bigint, \n    $4::bigint, \n    $5::text, \n    $6::text, \n    $7::jsonb\n) as resultado;",
+        "options": {
+          "queryReplacement": "={{ [\n  $('Code: Preparar Data IA').item.json.networkId,\n  $('Code: Preparar Data IA').item.json.massive_id || null,\n  $('Code: Preparar Data IA').item.json.failure_id || null,\n  $('Code: Preparar Data IA').item.json.existing_degrad_id || null,\n  $('Code: Parsear JSON IA').item.json.ai_parsed.assigned_to,\n  $('Code: Parsear JSON IA').item.json.full_diagnosis_text,\n  JSON.stringify($('Code: Preparar Data IA').item.json.evidence)\n] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -4032,
+        4736
+      ],
+      "id": "76387eff-6c68-48ba-9195-0a59ef442ce2",
+      "name": "Supabase: Register AI Degradation",
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "zv3CvTQjUWmJmOVa",
+          "name": "SOMMER NETWORK NEXUS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n{\n  \"channel\": \"C07FZE49ZPW\",\n  \"text\": \"⚠️ *NEXUS: Degradación Detectada*\",\n  \"attachments\": [\n    {\n      \"color\": \"#79088A\",\n      \"blocks\": [\n        {\n          \"type\": \"header\",\n          \"text\": {\n            \"type\": \"plain_text\",\n            \"text\": \"🤖 Diagnóstico 360 - Tienda \" + $('Code: Preparar Data IA').item.json.store_name,\n            \"emoji\": true\n          }\n        },\n        {\n          \"type\": \"divider\"\n        },\n        {\n          \"type\": \"section\",\n          \"text\": {\n            \"type\": \"mrkdwn\",\n            \"text\": \"ℹ️ *Análisis Nexus:* \\n\\n\" + $('Code: Parsear JSON IA').item.json.ai_parsed.general_analysis\n          }\n        },\n        {\n          \"type\": \"divider\"\n        },\n        {\n          \"type\": \"section\",\n          \"text\": {\n            \"type\": \"mrkdwn\",\n            \"text\": \"*Interfaz WAN1:*\\n\" + $('Code: Parsear JSON IA').item.json.ai_parsed.wan1_analysis + \"\\n\\n*Interfaz WAN2:*\\n\" + $('Code: Parsear JSON IA').item.json.ai_parsed.wan2_analysis\n          }\n        },\n        {\n          \"type\": \"divider\"\n        },\n        {\n          \"type\": \"section\",\n          \"text\": {\n            \"type\": \"mrkdwn\",\n            \"text\": \"🔍 *Diagnostico*: \\n\\n\" + $('Code: Parsear JSON IA').item.json.ai_parsed.diagnosis\n          }\n        },\n        {\n          \"type\": \"divider\"\n        },\n        {\n          \"type\": \"section\",\n          \"text\": {\n            \"type\": \"mrkdwn\",\n            \"text\": \"🛡️ *Recomendaciones:* \\n\\n\" + $('Code: Parsear JSON IA').item.json.ai_parsed.recommendations\n          }\n        }\n      ]\n    }\n  ]\n}\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -3712,
+        4544
+      ],
+      "id": "7aeb66d0-68ab-483f-846c-b9d564bff264",
+      "name": "Slack: Degradacion",
+      "executeOnce": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wXVhrJbOPKc34rz4",
+          "name": "Slack: Nexus"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE public.network_degradations_jj SET slack_thread_ts = $2 WHERE id = $1;",
+        "options": {
+          "queryReplacement": "={{ [\n  $('Supabase: Register AI Degradation').item.json.resultado.degrad_id,\n  $('Slack: Degradacion').item.json.ts\n] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -3472,
+        4544
+      ],
+      "id": "cd2f4d8f-8102-4bd4-8d11-0feaeaf36606",
+      "name": "Supabase: Guardar Slack TS",
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "zv3CvTQjUWmJmOVa",
+          "name": "SOMMER NETWORK NEXUS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Supabase: Register AI Degradation').item.json.resultado.assigned_to }}",
+                    "rightValue": "PROVEEDOR",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "c-prov"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Supabase: Register AI Degradation').item.json.resultado.assigned_to }}",
+                    "rightValue": "INTERNO",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "c-int"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -3152,
+        4208
+      ],
+      "id": "2974b82d-6b20-43cc-b686-86cb6dc3f56c",
+      "name": "Switch: Email Target",
+      "executeOnce": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -2944,
+        4128
+      ],
+      "id": "4ec28142-ec4e-48d2-b982-267974c5c246",
+      "name": "Mock: Enviar Email Proveedor",
+      "notesInFlow": true,
+      "notes": "Aquí configurará su nodo de Gmail o Outlook"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -2944,
+        4304
+      ],
+      "id": "8175a9fc-9672-4415-9d1f-9fb7ea9bafba",
+      "name": "Mock: Enviar Email Interno",
+      "notesInFlow": true,
+      "notes": "Aquí configurará su nodo de Gmail o Outlook"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE public.network_degradations_jj SET email_status = 'OK' WHERE id = $1;",
+        "options": {
+          "queryReplacement": "={{ [ $('Supabase: Register AI Degradation').item.json.resultado.degrad_id ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2688,
+        4224
+      ],
+      "id": "d1992180-30b2-4a44-8336-e58465de8397",
+      "name": "Supabase: Set Email Status",
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "zv3CvTQjUWmJmOVa",
+          "name": "SOMMER NETWORK NEXUS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -2576,
+        4560
+      ],
+      "id": "1a7c11f4-62b9-45ed-9c0f-4de2b38d9ac7",
+      "name": "Wait: Rate Limit API",
+      "webhookId": "e18fe0fc-715b-4bda-921d-d628a4ca1b99"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d530f05c-93bd-445f-9b8c-4e8e4121fa2c",
+              "leftValue": "={{ $json.resultado.trigger_slack }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -3824,
+        4736
+      ],
+      "id": "e0d62c0f-b141-4d30-99bc-bdf91406f7a2",
+      "name": "IF: Requiere Slack?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2d3f13db-8134-4725-95fa-faab4f21e6a4",
+              "leftValue": "={{ $('Supabase: Register AI Degradation').item.json.resultado.trigger_email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -3264,
+        4544
+      ],
+      "id": "cc19b5ee-c804-47fc-ab4f-821b44d7ab2d",
+      "name": "IF: Requiere Email?"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Cron: Cada 5 minutos": {
+      "main": [
+        [
+          {
+            "node": "Meraki: Obtener Estados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meraki: Obtener Estados": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Pre-Triaje Maestro V3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Pre-Triaje Maestro V3": {
+      "main": [
+        [
+          {
+            "node": "Code: Extraer Tareas IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Extraer Tareas IA": {
+      "main": [
+        [
+          {
+            "node": "Loop: Analisis Profundo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop: Analisis Profundo": {
+      "main": [
+        [],
+        [
+          {
+            "node": "360: Uplink Loss",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "360: Uplink Loss": {
+      "main": [
+        [
+          {
+            "node": "360: Uplink Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "360: Uplink Status": {
+      "main": [
+        [
+          {
+            "node": "360: VPN Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "360: VPN Status": {
+      "main": [
+        [
+          {
+            "node": "360: Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "360: Clients": {
+      "main": [
+        [
+          {
+            "node": "Code: Preparar Data IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Preparar Data IA": {
+      "main": [
+        [
+          {
+            "node": "Agente IA: Nexus JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente IA: Nexus JSON": {
+      "main": [
+        [
+          {
+            "node": "Code: Parsear JSON IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Parsear JSON IA": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Register AI Degradation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Degradacion": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Guardar Slack TS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch: Email Target": {
+      "main": [
+        [
+          {
+            "node": "Mock: Enviar Email Proveedor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mock: Enviar Email Interno",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mock: Enviar Email Proveedor": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Set Email Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mock: Enviar Email Interno": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Set Email Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Set Email Status": {
+      "main": [
+        [
+          {
+            "node": "Wait: Rate Limit API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Rate Limit API": {
+      "main": [
+        [
+          {
+            "node": "Loop: Analisis Profundo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Register AI Degradation": {
+      "main": [
+        [
+          {
+            "node": "IF: Requiere Slack?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Requiere Slack?": {
+      "main": [
+        [
+          {
+            "node": "Slack: Degradacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Guardar Slack TS": {
+      "main": [
+        [
+          {
+            "node": "IF: Requiere Email?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Requiere Email?": {
+      "main": [
+        [
+          {
+            "node": "Switch: Email Target",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait: Rate Limit API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "e0c036b2-81b7-4932-bb48-15ded21a5e6d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "711d50e124213b735042c98c8c11f15f25c693a7f4a2c9947e94bc2c86a3c4d9"
+  },
+  "id": "uPKbCUqFy3c2ohp7",
+  "tags": [
+    {
+      "updatedAt": "2025-11-04T12:35:34.440Z",
+      "createdAt": "2025-11-04T12:35:34.440Z",
+      "id": "4wsxjL1NIq8B7zfD",
+      "name": "SOMMER - MERAKI"
+    }
+  ]
+}

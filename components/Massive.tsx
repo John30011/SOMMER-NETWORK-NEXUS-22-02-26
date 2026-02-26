@@ -6,6 +6,7 @@ import { MassiveIncident, NetworkFailure } from '../types';
 import MassiveIncidentCard from './MassiveIncidentCard';
 import { Radio, Loader2, Search, Filter, AlertTriangle, CheckCircle2, History, X, RefreshCw, Calendar, Clock, Globe, ChevronDown, ChevronUp, Store, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import { MOCK_MASSIVE } from '../constants';
+import IncidentMapDrawer from './IncidentMapDrawer';
 
 // --- CUSTOM CALENDAR RANGE PICKER COMPONENT (Reused) ---
 interface DateRange {
@@ -132,6 +133,9 @@ const Massive: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
     const [searchTerm, setSearchTerm] = useState('');
 
+    // Map Drawer State
+    const [mapDrawerData, setMapDrawerData] = useState<{ incident: MassiveIncident, failures: NetworkFailure[] } | null>(null);
+
     // Date Range State
     const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
     const [showCalendar, setShowCalendar] = useState(false);
@@ -213,7 +217,7 @@ const Massive: React.FC = () => {
                 const ids = [...new Set(failData.map((f: any) => f.network_id))];
                 const { data: invData } = await supabase
                     .from('devices_inventory_jj')
-                    .select('network_id, nombre_tienda, codigo_tienda, wan1_provider:isp_providers_jj!wan1_provider_id(name), wan2_provider:isp_providers_jj!wan2_provider_id(name)')
+                    .select('network_id, nombre_tienda, codigo_tienda, coordenadas_geo, wan1_provider:isp_providers_jj!wan1_provider_id(name), wan2_provider:isp_providers_jj!wan2_provider_id(name)')
                     .in('network_id', ids);
 
                 enrichedFailures = failData.map((f: any) => {
@@ -222,6 +226,7 @@ const Massive: React.FC = () => {
                         ...f,
                         nombre_tienda: inv?.nombre_tienda || f.nombre_tienda,
                         codigo_tienda: inv?.codigo_tienda || null,
+                        coordenadas_geo: inv?.coordenadas_geo || null,
                         wan1_provider_name: inv?.wan1_provider?.name,
                         wan2_provider_name: inv?.wan2_provider?.name
                     }
@@ -470,6 +475,7 @@ const Massive: React.FC = () => {
                                                             onStatusChange={() => {
                                                                 fetchData(); // Force refresh on status change
                                                             }}
+                                                            onOpenMap={() => setMapDrawerData({ incident, failures: affected })}
                                                         />
                                                     );
                                                 })}
@@ -617,6 +623,15 @@ const Massive: React.FC = () => {
                     </>
                 )}
             </div>
+
+            {/* Map Drawer */}
+            {mapDrawerData && (
+                <IncidentMapDrawer
+                    incident={mapDrawerData.incident}
+                    failures={mapDrawerData.failures}
+                    onClose={() => setMapDrawerData(null)}
+                />
+            )}
         </div>
     );
 };
